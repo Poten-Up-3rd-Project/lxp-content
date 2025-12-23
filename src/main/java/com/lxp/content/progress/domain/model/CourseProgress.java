@@ -2,10 +2,13 @@ package com.lxp.content.progress.domain.model;
 
 import com.lxp.common.domain.event.AggregateRoot;
 import com.lxp.content.progress.domain.model.enums.CourseProgressStatus;
-import com.lxp.content.progress.domain.model.vo.*;
-import com.lxp.content.progress.domain.policy.CalculatePolicy;
-import com.lxp.content.progress.domain.policy.CompletionPolicy;
+import com.lxp.content.progress.domain.model.vo.CourseId;
+import com.lxp.content.progress.domain.model.vo.CourseProgressId;
+import com.lxp.content.progress.domain.model.vo.LectureId;
+import com.lxp.content.progress.domain.model.vo.UserId;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -44,27 +47,24 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
     }
 
     /**
-     * 강좌 내 강의 진행 상태 업데이트
+     * 강의 진행상태 업데이트
      * @param id 강의 ID
-     * @param lastPlayedTimeInSeconds 마지막 재생 시간
-     * @param policy 완료 정책
      */
-    public void updateLectureProgress(LectureId id,
-                                      Integer lastPlayedTimeInSeconds,
-                                      CompletionPolicy policy) {
-
-        LectureProgress lectureProgress = findLectureProgress(id);
-        if(lectureProgress.completed()) return;
-
-        lectureProgress.updateLastPlayedTime(lastPlayedTimeInSeconds, policy);
-    }
-
-    public void reflectCalculation(CourseCompletionResult result) {
-        this.totalProgress = result.totalProgress();
-
-        if(result.isCompleted()) {
-            complete();
+    public void updateProgress(LectureId id, Integer lastPlayedTimeInSeconds) {
+        if(this.courseProgressStatus == CourseProgressStatus.COMPLETED) {
+            throw new IllegalStateException("완료 상태의 강의는 진도를 업데이트 할 수 없습니다.");
         }
+
+        LectureProgress lectureProgress = lectureProgresses.stream()
+            .filter(lecProgress -> lecProgress.lectureId().equals(id))
+                .findAny().orElseThrow(() -> new IllegalArgumentException("해당 LectureProgressID에 해당하는 LectureProgress가 없습니다. : " + id.value()));
+
+        if(lectureProgress.completed())
+            return;
+
+        lectureProgress.updateLastPlayedTime(lastPlayedTimeInSeconds);
+
+        recalculateProgress();
     }
 
     /**
@@ -75,20 +75,27 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
         return (this.courseProgressStatus == CourseProgressStatus.COMPLETED && this.totalProgress == 100.0f);
     }
 
-    private void complete() {
-        this.courseProgressStatus = CourseProgressStatus.COMPLETED;
-        this.completedAt = LocalDateTime.now();
+    /**
+     * 강좌 진행률의 진행률 재 계산
+     * 소수점 버림
+     */
+    private void recalculateProgress() {
+        float total = ((float) lectureProgresses.stream().filter(LectureProgress::completed).count()) /
+                lectureProgresses.size() * 100;
+
+        this.totalProgress = BigDecimal.valueOf(total).setScale(0, RoundingMode.FLOOR).floatValue();
+
+        determineCompletion();
     }
 
     /**
-     * 강의 ID에 맞는 강의 진행 찾기
-     * @param id 강의 ID
-     * @return 강의 진행 도메인 객체
+     * 강좌 완료 처리
      */
-    private LectureProgress findLectureProgress(LectureId id) {
-        return lectureProgresses.stream()
-                .filter(lecProgress -> lecProgress.lectureId().equals(id))
-                .findAny().orElseThrow(() -> new IllegalArgumentException("해당 LectureProgressID에 해당하는 LectureProgress가 없습니다. : " + id.value()));
+    private void determineCompletion() {
+        if (this.totalProgress == 100.0f) {
+            this.courseProgressStatus = CourseProgressStatus.COMPLETED;
+            this.completedAt = LocalDateTime.now();
+        }
     }
 
     @Override
