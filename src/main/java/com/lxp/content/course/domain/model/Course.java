@@ -1,7 +1,9 @@
 package com.lxp.content.course.domain.model;
 
 import com.lxp.common.domain.event.AggregateRoot;
+import com.lxp.common.domain.policy.BusinessRuleValidator;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
+import com.lxp.content.course.domain.exception.CourseException;
 import com.lxp.content.course.domain.model.collection.CourseSections;
 import com.lxp.content.course.domain.model.collection.CourseTags;
 import com.lxp.content.course.domain.model.enums.Level;
@@ -10,6 +12,9 @@ import com.lxp.content.course.domain.model.vo.CourseDescription;
 import com.lxp.content.course.domain.model.vo.CourseTitle;
 import com.lxp.content.course.domain.model.vo.duration.CourseDuration;
 import com.lxp.content.course.domain.model.vo.duration.LectureDuration;
+import com.lxp.content.course.domain.rule.LectureMinCountRule;
+import com.lxp.content.course.domain.rule.SectionMinCountRule;
+import com.lxp.content.course.domain.rule.TagMinCountRule;
 import com.lxp.content.course.domain.service.spec.CourseMetaUpdateSpec;
 
 import java.time.Instant;
@@ -64,6 +69,7 @@ public class Course extends AggregateRoot<CourseUUID> {
             CourseSections sections,
             CourseTags tags)
     {
+        validateCreationInvariant(sections, tags);
         Course course = new Course(
                 null,
                 uuid,
@@ -119,8 +125,18 @@ public class Course extends AggregateRoot<CourseUUID> {
         );
     }
 
-    //setters
+    private static void validateCreationInvariant(
+            CourseSections sections,
+            CourseTags tags
+    ) {
+        BusinessRuleValidator.validateAll(
+                new SectionMinCountRule(sections),
+                new LectureMinCountRule(sections),
+                new TagMinCountRule(tags)
+        );
+    }
 
+    //setters
     public void apply(CourseMetaUpdateSpec changeSet) {
         changeSet.title().ifPresent(this::rename);
         changeSet.description().ifPresent(this::changeDescription);

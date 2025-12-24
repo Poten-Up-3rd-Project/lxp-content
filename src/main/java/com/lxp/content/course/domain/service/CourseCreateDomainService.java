@@ -2,7 +2,6 @@ package com.lxp.content.course.domain.service;
 
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.lxp.common.domain.annotation.DomainService;
-import com.lxp.common.domain.policy.BusinessRuleValidator;
 import com.lxp.content.course.domain.model.Course;
 import com.lxp.content.course.domain.model.Lecture;
 import com.lxp.content.course.domain.model.Section;
@@ -12,7 +11,6 @@ import com.lxp.content.course.domain.model.collection.SectionLectures;
 import com.lxp.content.course.domain.model.id.*;
 import com.lxp.content.course.domain.model.vo.duration.LectureDuration;
 import com.lxp.content.course.domain.policy.CourseCreationPolicy;
-import com.lxp.content.course.domain.rule.SectionMinCountRule;
 import com.lxp.content.course.domain.service.spec.CourseCreateSpec;
 import com.lxp.content.course.domain.service.spec.InstructorSpec;
 
@@ -27,10 +25,9 @@ public class CourseCreateDomainService {
             new CourseCreationPolicy();
 
     public Course create(CourseCreateSpec spec, InstructorSpec instructor) {
-
         creationPolicy.validate(spec, instructor);
 
-        Course course =  Course.create(
+        return  Course.create(
                 new CourseUUID(UuidCreator.getTimeOrderedEpoch().toString()),
                 new InstructorUUID(spec.instructorId()),
                 spec.thumbnailUrl(),
@@ -41,12 +38,10 @@ public class CourseCreateDomainService {
                 createTags(spec.tags())
         );
 
-        BusinessRuleValidator.validate(new SectionMinCountRule(course.sections()));
-        return course;
     }
 
     private static CourseSections createSections(List<CourseCreateSpec.SectionCreateSpec> specs) {
-        if (specs == null || specs.isEmpty()) {
+        if (specs == null) {
             return CourseSections.empty();
         }
 
@@ -66,10 +61,6 @@ public class CourseCreateDomainService {
     }
 
     private static SectionLectures createLectures(List<CourseCreateSpec.LectureCreateSpec> specs) {
-        if (specs == null || specs.isEmpty()) {
-            return SectionLectures.empty();
-        }
-
         AtomicInteger order = new AtomicInteger(1);
 
         List<Lecture> lectures = specs.stream().map(spec -> Lecture.create(

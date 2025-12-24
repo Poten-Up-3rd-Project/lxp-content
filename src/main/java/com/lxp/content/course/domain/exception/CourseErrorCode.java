@@ -13,6 +13,7 @@ public enum CourseErrorCode implements ErrorCode {
     // Lecture
     LECTURE_NOT_FOUND("COURSE_006", "Lecture not found", "NOT_FOUND"),
     LECTURE_DUPLICATE_UUID("COURSE_007", "Duplicate lecture UUID", "CONFLICT"),
+    LECTURE_MIN_COUNT_VIOLATION("COURSE_014", "Course must have at least one lecture", "BAD_REQUEST"),
 
     // Course
     COURSE_NOT_FOUND("COURSE_008", "Course not found", "NOT_FOUND"),

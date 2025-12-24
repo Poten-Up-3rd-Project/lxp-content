@@ -31,6 +31,7 @@ public class CourseTest {
                 new SectionUUID("section-123"),
                 1
         );
+        section.addLecture(new LectureUUID("lecture-123"), "1-1. 소개", new LectureDuration(300), "https://video.com/1");
 
         validSections = new CourseSections(List.of(section));
         validTags = CourseTags.of(List.of(new TagId(1L)));
@@ -252,7 +253,7 @@ public class CourseTest {
         @DisplayName("add lecture")
         void addLecture() {
 
-            LectureUUID lectureId = new LectureUUID("lecture-123");
+            LectureUUID lectureId = new LectureUUID("lecture-345");
             course.addLecture(
                     sectionUUID,
                     lectureId,
@@ -262,33 +263,33 @@ public class CourseTest {
             );
 
             Section section = course.sections().values().get(0);
-            assertThat(section.lectures().values()).hasSize(1);
+            assertThat(section.lectures().values()).hasSize(2); // setUp에서 이미 1개 추가됨
             assertThat(section.lectures().values().get(0).title()).isEqualTo("1-1. 소개");
-            assertThat(section.lectures().values().get(0).duration().seconds()).isEqualTo(600);
+            assertThat(section.totalDuration().seconds()).isEqualTo(900);
         }
 
         @Test
         @DisplayName("apply order when adding multiple Lectures")
         void addMultipleLectures() {
-            LectureUUID lectureUUID = new LectureUUID("lecture-123");
-            LectureUUID lectureUUID2 = new LectureUUID("lecture-234");
-            LectureUUID lectureUUID3 = new LectureUUID("lecture-345");
+            LectureUUID lectureUUID = new LectureUUID("lecture-345");
+            LectureUUID lectureUUID2 = new LectureUUID("lecture-456");
+            LectureUUID lectureUUID3 = new LectureUUID("lecture-789");
 
             course.addLecture(sectionUUID, lectureUUID,"1-1", new LectureDuration(300), "url1");
             course.addLecture(sectionUUID, lectureUUID2,"1-2", new LectureDuration(400), "url2");
             course.addLecture(sectionUUID, lectureUUID3, "1-3", new LectureDuration(500), "url3");
 
             Section section = course.sections().values().get(0);
-            assertThat(section.lectures().values()).hasSize(3);
-            assertThat(section.lectures().values().get(0).order()).isEqualTo(1);
+            assertThat(section.lectures().values()).hasSize(4);
             assertThat(section.lectures().values().get(1).order()).isEqualTo(2);
             assertThat(section.lectures().values().get(2).order()).isEqualTo(3);
+            assertThat(section.lectures().values().get(3).order()).isEqualTo(4);
         }
 
         @Test
         @DisplayName("exception when adding duplicate Lecture ID")
         void addDuplicateLecture() {
-            LectureUUID lectureId = new LectureUUID("lecture-123");
+            LectureUUID lectureId = new LectureUUID("lecture-345");
             course.addLecture(sectionUUID, lectureId, "1-1", new LectureDuration(300), "url");
 
             assertThatThrownBy(() ->
@@ -314,8 +315,6 @@ public class CourseTest {
         @DisplayName("remove Lecture")
         void removeLecture() {
             LectureUUID lectureId = new LectureUUID("lecture-123");
-            course.addLecture(sectionUUID, lectureId,"1-1", new LectureDuration(300), "url");
-
             course.removeLecture(sectionUUID, lectureId);
 
             Section section = course.sections().values().get(0);
@@ -325,10 +324,8 @@ public class CourseTest {
         @Test
         @DisplayName("reorder Lectures after removal")
         void reorderAfterRemoveLecture() {
-            LectureUUID lectureUUID = new LectureUUID("lecture-123");
             LectureUUID lectureUUID2 = new LectureUUID("lecture-234");
             LectureUUID lectureUUID3 = new LectureUUID("lecture-345");
-            course.addLecture(sectionUUID, lectureUUID,"1-1", new LectureDuration(300), "url1");
             course.addLecture(sectionUUID, lectureUUID2,"1-2", new LectureDuration(400), "url2");
             course.addLecture(sectionUUID, lectureUUID3, "1-3", new LectureDuration(500), "url3");
 
@@ -336,7 +333,7 @@ public class CourseTest {
 
             Section section = course.sections().values().get(0);
             assertThat(section.lectures().values()).hasSize(2);
-            assertThat(section.lectures().values().get(0).title()).isEqualTo("1-1");
+            assertThat(section.lectures().values().get(0).title()).isEqualTo("1-1. 소개");
             assertThat(section.lectures().values().get(0).order()).isEqualTo(1);
             assertThat(section.lectures().values().get(1).title()).isEqualTo("1-3");
             assertThat(section.lectures().values().get(1).order()).isEqualTo(2);
@@ -346,7 +343,6 @@ public class CourseTest {
         @DisplayName("rename Lecture")
         void renameLecture() {
             LectureUUID lectureUUID = new LectureUUID("lecture-123");
-            course.addLecture(sectionUUID, lectureUUID,"1-1", new LectureDuration(300), "url");
 
             course.renameLecture(sectionUUID, lectureUUID, "1-1. 수정됨");
 
@@ -358,7 +354,6 @@ public class CourseTest {
         @DisplayName("update Lecture video URL")
         void changeLectureVideoUrl() {
             LectureUUID lectureUUID = new LectureUUID("lecture-123");
-            course.addLecture(sectionUUID, lectureUUID,"1-1", new LectureDuration(300), "old-url");
 
             course.changeLectureVideoUrl(sectionUUID, lectureUUID, "new-url");
 
@@ -423,30 +418,22 @@ public class CourseTest {
     class CalculateDuration {
 
         @Test
-        @DisplayName("Lecture가 없으면 기본 duration을 반환한다")
-        void emptyCourseDuration() {
-            assertThat(course.totalDuration().seconds()).isEqualTo(1);
-        }
-
-        @Test
         @DisplayName("모든 Lecture의 duration 합계를 반환한다")
         void calculateTotalDuration() {
             SectionUUID section1 = new SectionUUID("section-123");
             SectionUUID section2 = new SectionUUID("section-234");
 
-            LectureUUID lectureUUID = new LectureUUID("lecture-123");
             LectureUUID lectureUUID2 = new LectureUUID("lecture-234");
             LectureUUID lectureUUID3 = new LectureUUID("lecture-345");
 
             // section1은 이미 있으므로 추가하지 않음
             course.addSection(section2, "2장");
 
-            course.addLecture(section1, lectureUUID, "1-1", new LectureDuration(600), "url");
-            course.addLecture(section1, lectureUUID2, "1-2", new LectureDuration(900), "url");
+            course.addLecture(section1, lectureUUID2, "1-2", new LectureDuration(900), "url"); // 300 + 900
             course.addLecture(section2, lectureUUID3, "2-1", new LectureDuration(1200), "url");
 
-            // 600 + 900 + 1200 = 2700초
-            assertThat(course.totalDuration().seconds()).isEqualTo(2700);
+
+            assertThat(course.totalDuration().seconds()).isEqualTo(2400L);
         }
     }
 

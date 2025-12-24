@@ -20,6 +20,10 @@ public record SectionLectures(List<Lecture> values)  {
         values = List.copyOf(sorted);
     }
 
+    public boolean isEmpty() {
+       return values.isEmpty();
+    }
+
     public static SectionLectures empty() {
         return new SectionLectures(List.of());
     }
