@@ -4,6 +4,8 @@ import com.lxp.content.progress.domain.model.enums.CourseProgressStatus;
 import com.lxp.content.progress.domain.model.vo.CourseId;
 import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.UserId;
+import com.lxp.content.progress.domain.policy.CourseCompletionPolicy;
+import com.lxp.content.progress.domain.policy.DefaultCompletionPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,6 +24,7 @@ class CourseProgressTest {
     private LectureId lectureId1, lectureId2, lectureId3;
     private List<LectureProgress> lectureProgresses;
     private CourseProgress courseProgress;
+    private CourseCompletionPolicy courseCompletionPolicy;
 
     @BeforeEach
     void setUp() {
@@ -37,6 +40,7 @@ class CourseProgressTest {
         );
 
         courseProgress = CourseProgress.create(userId, courseId, lectureProgresses);
+        courseCompletionPolicy = new DefaultCompletionPolicy();
     }
 
     @Nested
@@ -47,7 +51,7 @@ class CourseProgressTest {
         @DisplayName("TC-CP-001-1: 강의 하나를 완료하면 전체 진척도가 올바르게 계산되어야 한다 (33% 버림 처리)")
         void shouldCalculateProgress_WhenOneLectureIsCompleted() {
             // when: 3개 중 1개 완료
-            courseProgress.updateProgress(lectureId1, 600);
+            courseProgress.updateProgress(lectureId1, 600, courseCompletionPolicy);
 
             // then: 소수점 버림(FLOOR) 결과 확인
             assertEquals(33.0f,courseProgress.totalProgress(), "전체 진척도는 33.0f여야 한다");
@@ -58,9 +62,9 @@ class CourseProgressTest {
         @DisplayName("TC-CP-001-2: 모든 강의를 완료하면 강좌 상태가 COMPLETED로 변경되고 완료 시간이 기록된다")
         void shouldCompleteCourse_WhenAllLecturesAreCompleted() {
             // when: 모든 강의 완료
-            courseProgress.updateProgress(lectureId1, 600);
-            courseProgress.updateProgress(lectureId2, 900);
-            courseProgress.updateProgress(lectureId3, 700);
+            courseProgress.updateProgress(lectureId1, 600, courseCompletionPolicy);
+            courseProgress.updateProgress(lectureId2, 900, courseCompletionPolicy);
+            courseProgress.updateProgress(lectureId3, 700, courseCompletionPolicy);
 
             // then
             assertAll(
@@ -80,12 +84,12 @@ class CourseProgressTest {
         @DisplayName("TC-CP-002-1: 이미 완료된 강좌의 진척도를 업데이트하려 하면 예외가 발생한다")
         void shouldThrowException_WhenUpdateProgressOnCompletedCourse() {
             // given: 강좌 완료 상태 만들기
-            courseProgress.updateProgress(lectureId1, 600);
-            courseProgress.updateProgress(lectureId2, 900);
-            courseProgress.updateProgress(lectureId3, 700);
+            courseProgress.updateProgress(lectureId1, 600, courseCompletionPolicy);
+            courseProgress.updateProgress(lectureId2, 900, courseCompletionPolicy);
+            courseProgress.updateProgress(lectureId3, 700, courseCompletionPolicy);
 
             // when & then
-            assertThrows(IllegalStateException.class, () -> courseProgress.updateProgress(lectureId1, 100),
+            assertThrows(IllegalStateException.class, () -> courseProgress.updateProgress(lectureId1, 100, courseCompletionPolicy),
                     "완료 상태의 강의는 진도를 업데이트 할 수 없습니다.");
         }
 
@@ -97,7 +101,7 @@ class CourseProgressTest {
             LectureId unknownId = new LectureId("unknown");
 
             // when & then
-            assertThrows(IllegalArgumentException.class, () -> courseProgress.updateProgress(unknownId, 50),
+            assertThrows(IllegalArgumentException.class, () -> courseProgress.updateProgress(unknownId, 50, courseCompletionPolicy),
                     "해당 LectureProgressID에 해당하는 LectureProgress가 없습니다.");
         }
     }
