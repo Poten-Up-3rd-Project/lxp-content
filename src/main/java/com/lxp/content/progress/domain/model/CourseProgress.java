@@ -55,10 +55,7 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
             throw new IllegalStateException("완료 상태의 강의는 진도를 업데이트 할 수 없습니다.");
         }
 
-        LectureProgress lectureProgress = lectureProgresses.stream()
-            .filter(lecProgress -> lecProgress.lectureId().equals(id))
-                .findAny().orElseThrow(() -> new IllegalArgumentException("해당 LectureProgressID에 해당하는 LectureProgress가 없습니다. : " + id.value()));
-
+        LectureProgress lectureProgress = findLectureProgress(id);
         if(lectureProgress.completed())
             return;
 
@@ -96,6 +93,17 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
             this.courseProgressStatus = CourseProgressStatus.COMPLETED;
             this.completedAt = LocalDateTime.now();
         }
+    }
+
+    /**
+     * 강의 ID에 맞는 강의 진행 찾기
+     * @param id 강의 ID
+     * @return 강의 진행 도메인 객체
+     */
+    private LectureProgress findLectureProgress(LectureId id) {
+        return lectureProgresses.stream()
+                .filter(lecProgress -> lecProgress.lectureId().equals(id))
+                .findAny().orElseThrow(() -> new IllegalArgumentException("해당 LectureProgressID에 해당하는 LectureProgress가 없습니다. : " + id.value()));
     }
 
     @Override
