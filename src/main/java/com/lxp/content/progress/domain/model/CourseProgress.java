@@ -6,6 +6,7 @@ import com.lxp.content.progress.domain.model.vo.CourseId;
 import com.lxp.content.progress.domain.model.vo.CourseProgressId;
 import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.UserId;
+import com.lxp.content.progress.domain.policy.CourseCompletionPolicy;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -50,7 +51,7 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
      * 강의 진행상태 업데이트
      * @param id 강의 ID
      */
-    public void updateProgress(LectureId id, Integer lastPlayedTimeInSeconds) {
+    public void updateProgress(LectureId id, Integer lastPlayedTimeInSeconds, CourseCompletionPolicy policy) {
         if(this.courseProgressStatus == CourseProgressStatus.COMPLETED) {
             throw new IllegalStateException("완료 상태의 강의는 진도를 업데이트 할 수 없습니다.");
         }
@@ -61,7 +62,7 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
 
         lectureProgress.updateLastPlayedTime(lastPlayedTimeInSeconds);
 
-        recalculateProgress();
+        recalculateProgress(policy);
     }
 
     /**
@@ -76,20 +77,20 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
      * 강좌 진행률의 진행률 재 계산
      * 소수점 버림
      */
-    private void recalculateProgress() {
+    private void recalculateProgress(CourseCompletionPolicy policy) {
         float total = ((float) lectureProgresses.stream().filter(LectureProgress::completed).count()) /
                 lectureProgresses.size() * 100;
 
         this.totalProgress = BigDecimal.valueOf(total).setScale(0, RoundingMode.FLOOR).floatValue();
 
-        determineCompletion();
+        determineCompletion(policy);
     }
 
     /**
      * 강좌 완료 처리
      */
-    private void determineCompletion() {
-        if (this.totalProgress == 100.0f) {
+    private void determineCompletion(CourseCompletionPolicy policy) {
+        if(policy.isSatisfiedBy(totalProgress, lectureProgresses)){
             this.courseProgressStatus = CourseProgressStatus.COMPLETED;
             this.completedAt = LocalDateTime.now();
         }
