@@ -171,10 +171,18 @@ public class CourseTest {
         @Test
         @DisplayName("remove Section")
         void removeSection() {
-            SectionUUID targetUUID = new SectionUUID("section-123");
-            course.removeSection(targetUUID);
+            // 새 섹션 추가 + 그 안에 Lecture도 추가
+            SectionUUID sectionId2 = new SectionUUID("section-456");
+            LectureUUID lectureId2 = new LectureUUID("lecture-456");
 
-            assertThat(course.sections().values()).hasSize(0);
+            course.addSection(sectionId2, "추가 섹션");
+            course.addLecture(sectionId2, lectureId2, "추가 강의", LectureDuration.randomUnder20Minutes(), "http://video.com");
+
+            // 기존 섹션 삭제
+            course.removeSection(new SectionUUID("section-123"));
+
+            assertThat(course.sections().values()).hasSize(1);
+            assertThat(course.sections().values().get(0).uuid()).isEqualTo(sectionId2);
         }
 
         @Test
@@ -315,12 +323,14 @@ public class CourseTest {
         @DisplayName("remove Lecture")
         void removeLecture() {
             LectureUUID lectureId = new LectureUUID("lecture-123");
+            LectureUUID lectureId2 = new LectureUUID("lecture-456");
+
+            course.addLecture(sectionUUID, lectureId2, "추가 강의", LectureDuration.randomUnder20Minutes(), "http://video2.com");
             course.removeLecture(sectionUUID, lectureId);
 
             Section section = course.sections().values().get(0);
-            assertThat(section.lectures().values()).isEmpty();
+            assertThat(section.lectures().values()).hasSize(1);
         }
-
         @Test
         @DisplayName("reorder Lectures after removal")
         void reorderAfterRemoveLecture() {

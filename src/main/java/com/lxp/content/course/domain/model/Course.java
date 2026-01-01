@@ -136,6 +136,19 @@ public class Course extends AggregateRoot<CourseUUID> {
         );
     }
 
+    private void ensureSectionStructureIsValid() {
+        BusinessRuleValidator.validateAll(
+                new SectionMinCountRule(sections),
+                new LectureMinCountRule(sections)
+        );
+    }
+
+    private void ensureTagPolicySatisfied() {
+        BusinessRuleValidator.validate(
+                new TagMinCountRule(tags)
+        );
+    }
+
     //setters
     public void apply(CourseMetaUpdateSpec changeSet) {
         changeSet.title().ifPresent(this::rename);
@@ -169,6 +182,7 @@ public class Course extends AggregateRoot<CourseUUID> {
 
     public void removeSection(SectionUUID uuid) {
         this.sections = sections.removeSection(uuid);
+        ensureSectionStructureIsValid();
     }
 
     public void renameSection(SectionUUID uuid, String title) {
@@ -192,6 +206,7 @@ public class Course extends AggregateRoot<CourseUUID> {
 
     public void removeLecture(SectionUUID sectionUUID, LectureUUID lectureUUID) {
         this.sections = sections.removeLecture(sectionUUID, lectureUUID);
+        ensureSectionStructureIsValid();
     }
 
     public void renameLecture(SectionUUID sectionUUID, LectureUUID lectureUUID, String newTitle) {
@@ -209,6 +224,7 @@ public class Course extends AggregateRoot<CourseUUID> {
 
     public void removeTag(TagId tag) {
         this.tags = this.tags.remove(tag);
+        ensureTagPolicySatisfied();
     }
 
     public boolean hasTag(TagId tag) {
