@@ -9,7 +9,7 @@ public class ActiveInstructorSpecification implements Specification<InstructorSp
 
     @Override
     public boolean isSatisfiedBy(InstructorSpec instructor) {
-        return !Objects.equals(instructor.status(), "ACTIVE")
+        return Objects.equals(instructor.status(), "ACTIVE")
                 && instructor.role().equals("INSTRUCTOR");
     }
 
