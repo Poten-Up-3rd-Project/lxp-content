@@ -1,4 +1,4 @@
-package com.lxp.content.course.application.read;
+package com.lxp.content.course.application.projection;
 
 import com.lxp.content.course.domain.model.enums.Level;
 
