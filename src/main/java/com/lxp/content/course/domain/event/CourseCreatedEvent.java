@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
+@OutboxRequired
 public class CourseCreatedEvent extends BaseDomainEvent implements CrudEvent {
 
     private final String instructorUuid;
