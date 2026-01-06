@@ -5,6 +5,7 @@ import com.lxp.content.progress.domain.model.enums.LectureProgressStatus;
 import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.LectureProgressId;
 import com.lxp.content.progress.domain.model.vo.UserId;
+import com.lxp.content.progress.domain.policy.CompletionPolicy;
 
 import java.util.Objects;
 
@@ -46,7 +47,7 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
     /**
      * 강의 진행률 기록
      */
-    public void updateLastPlayedTime(Integer lastPlayedTimeInSeconds) {
+    public void updateLastPlayedTime(Integer lastPlayedTimeInSeconds, CompletionPolicy policy) {
         if(this.lectureProgressStatus == LectureProgressStatus.COMPLETED) {
             throw new IllegalStateException("완료 상태의 강의는 진도를 업데이트 할 수 없습니다.");
         }
@@ -57,8 +58,8 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
 
         this.lastPlayedTimeInSeconds = lastPlayedTimeInSeconds;
 
-        if(lastPlayedTimeInSeconds >= totalDurationInSeconds) {
-            changeCompleted();
+        if(lastPlayedTimeInSeconds.equals(totalDurationInSeconds)) {
+            changeCompleted(policy);
         } else if(lastPlayedTimeInSeconds > 0) {
             changeInProgress();
         }
@@ -87,12 +88,14 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
     /**
      * 강의 기록 완료 상태로 변경
      */
-    private void changeCompleted() {
+    private void changeCompleted(CompletionPolicy policy) {
         if(this.lectureProgressStatus == LectureProgressStatus.COMPLETED) {
             throw new IllegalStateException("완료 상태의 강의는 진행 상태로 변경할 수 없습니다.");
         }
 
-        this.lectureProgressStatus = LectureProgressStatus.COMPLETED;
+        if(policy.isSatisfiedBy(this)) {
+            this.lectureProgressStatus = LectureProgressStatus.COMPLETED;
+        }
     }
 
     public LectureProgressId getId() { return lectureProgressId; }
