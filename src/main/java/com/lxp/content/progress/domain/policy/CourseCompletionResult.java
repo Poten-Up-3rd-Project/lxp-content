@@ -1,4 +1,4 @@
-package com.lxp.content.progress.domain.model.vo;
+package com.lxp.content.progress.domain.policy;
 
 /**
  * 강좌 완료 진행도, 완료 여부 DTO

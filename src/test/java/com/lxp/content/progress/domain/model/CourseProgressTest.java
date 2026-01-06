@@ -1,7 +1,7 @@
 package com.lxp.content.progress.domain.model;
 
 import com.lxp.content.progress.domain.model.enums.CourseProgressStatus;
-import com.lxp.content.progress.domain.model.vo.CourseCompletionResult;
+import com.lxp.content.progress.domain.policy.CourseCompletionResult;
 import com.lxp.content.progress.domain.model.vo.CourseId;
 import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.UserId;

@@ -3,8 +3,8 @@ package com.lxp.content.progress.domain.model;
 import com.lxp.common.domain.event.AggregateRoot;
 import com.lxp.content.progress.domain.model.enums.CourseProgressStatus;
 import com.lxp.content.progress.domain.model.vo.*;
-import com.lxp.content.progress.domain.policy.CalculatePolicy;
 import com.lxp.content.progress.domain.policy.CompletionPolicy;
+import com.lxp.content.progress.domain.policy.CourseCompletionResult;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,7 +1,6 @@
 package com.lxp.content.progress.domain.policy;
 
 import com.lxp.content.progress.domain.model.LectureProgress;
-import com.lxp.content.progress.domain.model.vo.CourseCompletionResult;
 
 import java.util.List;
 
