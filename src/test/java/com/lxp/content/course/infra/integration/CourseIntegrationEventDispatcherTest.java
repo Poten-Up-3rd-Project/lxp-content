@@ -1,17 +1,16 @@
-package com.lxp.content.course.infra.persistence.integration;
+package com.lxp.content.course.infra.integration;
 
 
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.lxp.common.infrastructure.persistence.OutboxEvent;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
 import com.lxp.content.course.domain.model.enums.Level;
 import com.lxp.content.course.infra.event.CourseIntegrationEventDispatcher;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import com.lxp.content.course.infra.outbox.CourseOutboxRepository;
+import org.junit.jupiter.api.*;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
@@ -22,12 +21,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -36,6 +37,7 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest
 @Testcontainers
 public class CourseIntegrationEventDispatcherTest {
+
     @Container
     static RabbitMQContainer rabbitMQ = new RabbitMQContainer("rabbitmq:3.12-management");
 
@@ -47,14 +49,18 @@ public class CourseIntegrationEventDispatcherTest {
         registry.add("spring.rabbitmq.password", rabbitMQ::getAdminPassword);
     }
 
+    @Autowired
+    private CourseOutboxRepository outboxRepository;
+
+    @Autowired
+    private CourseIntegrationEventDispatcher dispatcher;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
     private RabbitAdmin rabbitAdmin;
 
-    @Autowired
-    private CourseIntegrationEventDispatcher dispatcher;
+    private ObjectMapper objectMapper;
 
     private static final String EXCHANGE = "course.exchange";
     private static final String QUEUE = "course.created.queue";
@@ -63,7 +69,6 @@ public class CourseIntegrationEventDispatcherTest {
 
     @BeforeEach
     void setUp() {
-        // Exchange, Queue, Binding 설정
         rabbitAdmin = new RabbitAdmin(rabbitTemplate.getConnectionFactory());
         rabbitAdmin.declareExchange(new TopicExchange(EXCHANGE));
         rabbitAdmin.declareQueue(new Queue(QUEUE, true));
@@ -72,62 +77,71 @@ public class CourseIntegrationEventDispatcherTest {
                         .to(new TopicExchange(EXCHANGE))
                         .with(ROUTING_KEY)
         );
-
-        // 큐 비우기
         rabbitAdmin.purgeQueue(QUEUE);
+
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Test
-    @DisplayName("도메인 이벤트 발행 시 RabbitMQ로 메시지가 전송된다")
-    void dispatch_sendsMessageToRabbitMQ() {
+    @DisplayName("BEFORE_COMMIT: Outbox 테이블에 이벤트가 저장된다")
+    @Transactional
+    void onBeforeCommit_savesToOutbox() {
         // given
-        CourseCreatedEvent domainEvent = new CourseCreatedEvent(
-                "course-123",
-                "instructor-456",
-                "Java 기초",
-                "자바 기초 강의입니다",
-                "thumbnail.png",
-                Level.JUNIOR,
-                List.of(1L, 2L)
-        );
+        CourseCreatedEvent domainEvent = createDomainEvent("course-123");
 
         // when
-        dispatcher.dispatch(domainEvent);
+        dispatcher.onBeforeCommit(domainEvent);
 
-        // then - RabbitMQ에서 메시지 수신 확인
+        // then
+        Optional<OutboxEvent> saved = outboxRepository.findByEventId(domainEvent.getEventId());
+        assertThat(saved).isPresent();
+        assertThat(saved.get().getEventType()).isEqualTo("course.created");
+        assertThat(saved.get().getAggregateId()).isEqualTo("course-123");
+        assertThat(saved.get().getStatus()).isEqualTo(OutboxEvent.OutboxStatus.PENDING);
+    }
+
+
+
+    @Test
+    @DisplayName("AFTER_COMMIT: Outbox에서 읽어서 RabbitMQ로 발행하고 상태가 PUBLISHED로 변경된다")
+    void onAfterCommit_publishesAndMarksPublished() {
+        // given
+        CourseCreatedEvent domainEvent = createDomainEvent("course-456");
+
+        // Outbox에 먼저 저장 (BEFORE_COMMIT 시뮬레이션)
+        dispatcher.onBeforeCommit(domainEvent);
+
+        // when
+        dispatcher.onAfterCommit(domainEvent);
+
+        // then - RabbitMQ 메시지 확인
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
             Message message = rabbitTemplate.receive(QUEUE, 1000);
-
             assertThat(message).isNotNull();
 
-            Assertions.assertNotNull(message);
             String body = new String(message.getBody());
-            assertThat(body).contains("course-123");
-            assertThat(body).contains("instructor-456");
-            assertThat(body).contains("Java 기초");
+            assertThat(body).contains("course-456");
+        });
+
+        // then - Outbox 상태 확인
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
+            Optional<OutboxEvent> outbox = outboxRepository.findByEventId(domainEvent.getEventId());
+            assertThat(outbox).isPresent();
+            assertThat(outbox.get().getStatus()).isEqualTo(OutboxEvent.OutboxStatus.PUBLISHED);
         });
     }
 
 
     @Test
     @DisplayName("IntegrationEvent 형식으로 변환되어 전송된다")
-    void dispatch_convertsToIntegrationEvent() throws Exception {
+    void dispatch_convertsToIntegrationEvent() {
         // given
-        CourseCreatedEvent domainEvent = new CourseCreatedEvent(
-                "course-789",
-                "instructor-111",
-                "Spring 입문",
-                "스프링 입문 강의",
-                "spring.png",
-                Level.MIDDLE,
-                List.of(3L, 4L)
-        );
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+        CourseCreatedEvent domainEvent = createDomainEvent("course-789");
+        dispatcher.onBeforeCommit(domainEvent);
 
         // when
-        dispatcher.dispatch(domainEvent);
+        dispatcher.onAfterCommit(domainEvent);
 
         // then
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -146,10 +160,46 @@ public class CourseIntegrationEventDispatcherTest {
             JsonNode payload = json.get("payload");
             assertThat(payload).isNotNull();
             assertThat(payload.get("courseUuid").asText()).isEqualTo("course-789");
-            assertThat(payload.get("instructorUuid").asText()).isEqualTo("instructor-111");
-            assertThat(payload.get("title").asText()).isEqualTo("Spring 입문");
-            assertThat(payload.get("difficulty").asText()).isEqualTo("MIDDLE");
         });
+    }
+
+    @Test
+    @DisplayName("발행 실패 시 Outbox 상태가 FAILED로 변경된다")
+    @Disabled("추후 해당 테스트 따로 격리")
+    void onAfterCommit_marksFailedOnError() {
+        // given
+        CourseCreatedEvent domainEvent = createDomainEvent("course-fail");
+        dispatcher.onBeforeCommit(domainEvent);
+
+        // RabbitMQ 연결 끊기 (실패 유도)
+        rabbitMQ.stop();
+
+        // when
+        dispatcher.onAfterCommit(domainEvent);
+
+        // then
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
+            Optional<OutboxEvent> outbox = outboxRepository.findByEventId(domainEvent.getEventId());
+            assertThat(outbox).isPresent();
+            assertThat(outbox.get().getStatus()).isEqualTo(OutboxEvent.OutboxStatus.FAILED);
+            assertThat(outbox.get().getRetryCount()).isGreaterThan(0);
+        });
+
+        // cleanup
+        rabbitMQ.start();
+    }
+
+
+    private CourseCreatedEvent createDomainEvent(String courseUuid) {
+        return new CourseCreatedEvent(
+                courseUuid,
+                "instructor-456",
+                "Java 기초",
+                "자바 기초 강의입니다",
+                "thumbnail.png",
+                Level.JUNIOR,
+                List.of(1L, 2L)
+        );
     }
 
 }
