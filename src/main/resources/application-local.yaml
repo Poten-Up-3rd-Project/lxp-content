@@ -26,3 +26,13 @@ spring:
     port: 5672
     username: lxp
     password: lxp
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      probes:
+        enabled: true
