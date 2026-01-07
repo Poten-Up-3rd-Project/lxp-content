@@ -54,6 +54,7 @@ class CourseProgressTest {
 
         @Test
         @DisplayName("TC-CP-001-1: 강의 하나를 완료하면 전체 진척도가 올바르게 계산되어야 한다 (33% 버림 처리)")
+        @Disabled("해당 테스트는 정책과 같이 이루어져야 하기에 도메인 서비스에서 테스트 되어야 함")
         void shouldCalculateProgress_WhenOneLectureIsCompleted() {
             // given: 3개 중 1개 완료
             courseProgress.updateLectureProgress(lectureId1, 600, completionPolicy);

@@ -9,4 +9,12 @@ public record CourseCompletionResult (
         float totalProgress,
         boolean isCompleted
 ) {
+
+    /**
+     * 수강 전 강의 진행률 결과
+     * @return 수강 전 강의 진행률 레코드
+     */
+    public static CourseCompletionResult withZeroProgress() {
+        return new CourseCompletionResult(0.0f, false);
+    }
 }

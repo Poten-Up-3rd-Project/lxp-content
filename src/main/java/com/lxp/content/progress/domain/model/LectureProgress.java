@@ -44,6 +44,12 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
         );
     }
 
+    public static LectureProgress create(Long id, LectureProgressId lectureProgressId, UserId userId, LectureId lectureId, LectureProgressStatus lectureProgressStatus, Integer lastPlayedTimeInSeconds, Integer totalDurationInSeconds) {
+        return new LectureProgress(
+                id, lectureProgressId, userId, lectureId, lectureProgressStatus, lastPlayedTimeInSeconds, totalDurationInSeconds
+        );
+    }
+
     /**
      * 강의 진행률 기록
      */
@@ -58,10 +64,10 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
 
         this.lastPlayedTimeInSeconds = lastPlayedTimeInSeconds;
 
-        if(lastPlayedTimeInSeconds.equals(totalDurationInSeconds)) {
-            changeCompleted(policy);
-        } else if(lastPlayedTimeInSeconds > 0) {
-            changeInProgress();
+        if(policy.isSatisfiedBy(this)) {
+            this.lectureProgressStatus = LectureProgressStatus.COMPLETED;
+        } else if(this.lastPlayedTimeInSeconds > 0) {
+            this.lectureProgressStatus = LectureProgressStatus.IN_PROGRESS;
         }
     }
 
@@ -98,6 +104,8 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
         }
     }
 
+    public Long getEntityId() { return id; }
+
     public LectureProgressId getId() { return lectureProgressId; }
 
     public UserId userId() { return userId;}
@@ -120,6 +128,7 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
     }
 
     private LectureProgress(Long id, LectureProgressId lectureProgressId, UserId userId, LectureId lectureId, LectureProgressStatus lectureProgressStatus, Integer lastPlayedTimeInSeconds, Integer totalDurationInSeconds) {
+        this.id = id;
         this.lectureProgressId = lectureProgressId;
         this.userId = userId;
         this.lectureId = lectureId;
