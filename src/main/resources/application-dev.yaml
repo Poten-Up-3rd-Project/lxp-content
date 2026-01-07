@@ -29,6 +29,10 @@ spring:
 
 # Actuator (Health Check)
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
   endpoint:
     health:
       probes:
