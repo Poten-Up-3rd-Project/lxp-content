@@ -3,6 +3,8 @@ package com.lxp.content.progress.domain.model;
 import com.lxp.content.progress.domain.model.enums.LectureProgressStatus;
 import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.UserId;
+import com.lxp.content.progress.domain.policy.CompletionPolicy;
+import com.lxp.content.progress.domain.policy.DefaultCompletionPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,8 @@ class LectureProgressTest {
     private Integer totalDurationInSeconds;
     private LectureProgress lectureProgress;
 
+    private CompletionPolicy completionPolicy;
+
     @BeforeEach
     void setUp() {
         userId = new UserId(UUID.randomUUID().toString());
@@ -30,6 +34,8 @@ class LectureProgressTest {
         lectureProgress = LectureProgress.create(
                 userId, lectureId, totalDurationInSeconds
         );
+
+        completionPolicy = new DefaultCompletionPolicy();
     }
 
     @Test
@@ -76,7 +82,7 @@ class LectureProgressTest {
         @DisplayName("TC-LP-002-1: 재생 시간이 0 이하인 경우 예외가 발생해야 한다")
         void shouldThrowException_WhenLastPlayedTimeIsNegative() {
             Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                lectureProgress.updateLastPlayedTime(-10);
+                lectureProgress.updateLastPlayedTime(-10, completionPolicy);
             });
 
             assertEquals("lastPlayedTimeInSeconds는 음수일 수 없습니다.", exception.getMessage(),
@@ -87,7 +93,7 @@ class LectureProgressTest {
         @DisplayName("TC-LP-002-2: 재생 시간이 전체 재생 시간을 초과하는 경우 예외가 발생해야 한다")
         void shouldThrowException_WhenLastPlayedTimeExceedsTotalDuration() {
             Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                lectureProgress.updateLastPlayedTime(700),
+                lectureProgress.updateLastPlayedTime(700, completionPolicy),
                 "재생 시간이 전체 재생 시간을 초과하는 경우 올바른 예외 메시지가 반환되어야 한다");
         }
     }
@@ -100,7 +106,7 @@ class LectureProgressTest {
         @DisplayName("TC-LP-003-1: 마지막 재생시간 입력 시 진행 중 상태로 업데이트 되어야 한다")
         void shouldUpdateToInProgressStatus_WhenUpdateLastPlayedTime() {
             // when - 진행 중 상태로 업데이트
-            lectureProgress.updateLastPlayedTime(300);
+            lectureProgress.updateLastPlayedTime(300, completionPolicy);
 
             // then
             assertEquals(300, lectureProgress.lastPlayedTimeInSeconds(),
@@ -113,7 +119,7 @@ class LectureProgressTest {
         @DisplayName("TC-LP-003-2: 마지막 재생시간 입력 시 완료 상태로 업데이트 되어야 한다")
         void shouldUpdateToCompletedStatus_WhenUpdateLastPlayedTime() {
             // when - 완료 상태로 업데이트
-            lectureProgress.updateLastPlayedTime(600);
+            lectureProgress.updateLastPlayedTime(600, completionPolicy);
 
             // then
             assertEquals(600, lectureProgress.lastPlayedTimeInSeconds(),
@@ -126,11 +132,11 @@ class LectureProgressTest {
         @DisplayName("TC-LP-003-3: 완료된 강의에 대해 다시 업데이트 될 수 없다")
         void shouldNotUpdate_WhenLectureProgressStatusIsCompleted() {
             // when - 완료 상태로 업데이트
-            lectureProgress.updateLastPlayedTime(600);
+            lectureProgress.updateLastPlayedTime(600, completionPolicy);
 
             // when - 완료된 강의에 대해 다시 업데이트 시도
             Exception exception = assertThrows(IllegalStateException.class, () -> {
-                lectureProgress.updateLastPlayedTime(650);
+                lectureProgress.updateLastPlayedTime(650, completionPolicy);
             });
 
             // then
@@ -143,7 +149,7 @@ class LectureProgressTest {
     @DisplayName("TC-LP-004: completed 메서드는 LectureProgress 상태가 COMPLETED, 재생시간 == 전체시간일 때 true를 반환한다")
     void shouldReturnTrue_WhenLectureIsCompleted() {
         // when - 완료 상태로 업데이트
-        lectureProgress.updateLastPlayedTime(600);
+        lectureProgress.updateLastPlayedTime(600, completionPolicy);
 
         // then
         assertTrue(lectureProgress.completed(),
