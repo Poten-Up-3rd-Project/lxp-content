@@ -26,8 +26,9 @@ public class DefaultCalculatePolicy implements CalculatePolicy {
 
         BigDecimal completed = BigDecimal.valueOf(completedCount);          // 완료 된 강의
         BigDecimal total = BigDecimal.valueOf(lectureProgresses.size());    // 전체
-        BigDecimal progress = completed.divide(total, RoundingMode.HALF_UP)
+        BigDecimal progress = completed
                 .multiply(BigDecimal.valueOf(100))
+                .divide(total, RoundingMode.HALF_UP)
                 .setScale(0, RoundingMode.FLOOR);
 
         float resultProgress = progress.floatValue();
