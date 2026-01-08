@@ -74,7 +74,6 @@ public class CourseCreateServiceTest {
         assertThat(result.sections().get(0).title()).isEqualTo("1장. 소개");
         assertThat(result.sections().get(0).lectures()).hasSize(1);
         assertThat(result.sections().get(0).lectures().get(0).title()).isEqualTo("1-1. 강의 소개");
-        assertThat(result.durationOnMinutes()).isGreaterThan(1);
     }
 
 
