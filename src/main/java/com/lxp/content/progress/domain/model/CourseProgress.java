@@ -18,7 +18,6 @@ import java.util.Objects;
  */
 public class CourseProgress extends AggregateRoot<CourseProgressId> {
 
-    private Long id;
     private CourseProgressId courseProgressId;
     private UserId userId;
     private CourseId courseId;
@@ -47,7 +46,6 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
     }
 
     public static CourseProgress create(
-            Long id,
             CourseProgressId courseProgressId,
             UserId userId,
             CourseId courseId,
@@ -55,7 +53,6 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
             CourseProgressStatus courseProgressStatus,
             LocalDateTime completedAt) {
         return new CourseProgress(
-                id,
                 courseProgressId,
                 userId,
                 courseId,
@@ -137,7 +134,7 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
         this.userId = userId;
     }
 
-    private CourseProgress(Long id,
+    private CourseProgress(
                            CourseProgressId courseProgressId,
                            UserId userId,
                            CourseId courseId,
@@ -145,7 +142,6 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
                            CourseProgressStatus courseProgressStatus,
                            LocalDateTime completedAt,
                            List<LectureProgress> lectureProgresses) {
-        this.id = id;
         this.courseProgressId = courseProgressId;
         this.userId = userId;
         this.courseId = courseId;

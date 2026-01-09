@@ -14,7 +14,6 @@ import java.util.Objects;
  */
 public class LectureProgress extends BaseEntity<LectureProgressId> {
 
-    private Long id;
     private LectureProgressId lectureProgressId;
     private UserId userId;
     private LectureId lectureId;
@@ -44,9 +43,9 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
         );
     }
 
-    public static LectureProgress create(Long id, LectureProgressId lectureProgressId, UserId userId, LectureId lectureId, LectureProgressStatus lectureProgressStatus, Integer lastPlayedTimeInSeconds, Integer totalDurationInSeconds) {
+    public static LectureProgress create(LectureProgressId lectureProgressId, UserId userId, LectureId lectureId, LectureProgressStatus lectureProgressStatus, Integer lastPlayedTimeInSeconds, Integer totalDurationInSeconds) {
         return new LectureProgress(
-                id, lectureProgressId, userId, lectureId, lectureProgressStatus, lastPlayedTimeInSeconds, totalDurationInSeconds
+                lectureProgressId, userId, lectureId, lectureProgressStatus, lastPlayedTimeInSeconds, totalDurationInSeconds
         );
     }
 
@@ -104,8 +103,6 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
         }
     }
 
-    public Long getEntityId() { return id; }
-
     public LectureProgressId getId() { return lectureProgressId; }
 
     public UserId userId() { return userId;}
@@ -127,8 +124,7 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
         this.totalDurationInSeconds = totalDurationInSeconds;
     }
 
-    private LectureProgress(Long id, LectureProgressId lectureProgressId, UserId userId, LectureId lectureId, LectureProgressStatus lectureProgressStatus, Integer lastPlayedTimeInSeconds, Integer totalDurationInSeconds) {
-        this.id = id;
+    private LectureProgress(LectureProgressId lectureProgressId, UserId userId, LectureId lectureId, LectureProgressStatus lectureProgressStatus, Integer lastPlayedTimeInSeconds, Integer totalDurationInSeconds) {
         this.lectureProgressId = lectureProgressId;
         this.userId = userId;
         this.lectureId = lectureId;
