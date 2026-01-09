@@ -22,6 +22,9 @@ public class LectureProgressId extends ValueObject {
     public static LectureProgressId create() {
         return new LectureProgressId(UUID.randomUUID().toString());
     }
+    public static LectureProgressId create(String value) {
+        return new LectureProgressId(value);
+    }
 
     public String value() {
         return value;

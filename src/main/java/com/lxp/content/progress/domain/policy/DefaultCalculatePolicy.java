@@ -1,7 +1,6 @@
 package com.lxp.content.progress.domain.policy;
 
 import com.lxp.content.progress.domain.model.LectureProgress;
-import com.lxp.content.progress.domain.model.vo.CourseCompletionResult;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -18,17 +17,23 @@ public class DefaultCalculatePolicy implements CalculatePolicy {
     @Override
     public CourseCompletionResult calculateCourseProgress(List<LectureProgress> lectureProgresses) {
         if(lectureProgresses.isEmpty()) {
-            return new CourseCompletionResult(0, false);
+            return CourseCompletionResult.withZeroProgress();
         }
 
         long completedCount = lectureProgresses.stream()
                 .filter(LectureProgress::completed)
                 .count();
 
-        float progress = ((float) completedCount / lectureProgresses.size()) * 100;
-        progress = BigDecimal.valueOf(progress).setScale(0, RoundingMode.FLOOR).floatValue();
+        BigDecimal completed = BigDecimal.valueOf(completedCount);          // 완료 된 강의
+        BigDecimal total = BigDecimal.valueOf(lectureProgresses.size());    // 전체
+        BigDecimal progress = completed
+                .multiply(BigDecimal.valueOf(100))
+                .divide(total, RoundingMode.HALF_UP)
+                .setScale(0, RoundingMode.FLOOR);
 
-        return new CourseCompletionResult(progress, progress >= 100.0f);
+        float resultProgress = progress.floatValue();
+
+        return new CourseCompletionResult(resultProgress, resultProgress >= 100.0f);
     }
 
 }
