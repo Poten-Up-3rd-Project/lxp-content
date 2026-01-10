@@ -12,6 +12,7 @@ import com.lxp.content.course.domain.event.CourseCreatedEvent;
 import com.lxp.content.course.domain.model.enums.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,6 +25,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,78 +61,86 @@ class CourseEventPublishingHandlerTest {
         integrationEvent = createIntegrationEvent(domainEvent);
     }
 
-    @Test
-    @DisplayName("도메인 이벤트를 IntegrationEventPublishCommand로 변환하여 Registry에 publish한다")
-    void handle_publishesIntegrationEventCommand() {
-        // given
-        given(mapper.toIntegrationEvent(domainEvent)).willReturn(integrationEvent);
-        given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.OUTBOX_REQUIRED);
+    @Nested
+    @DisplayName("handleBeforeCommit (OUTBOX_REQUIRED)")
+    class HandleBeforeCommit {
 
-        // when
-        handler.handle(domainEvent);
+        @Test
+        @DisplayName("OUTBOX_REQUIRED 정책이면 Registry에 등록한다")
+        void registersWhenOutboxRequired() {
+            // given
+            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.OUTBOX_REQUIRED);
+            given(mapper.toIntegrationEvent(domainEvent)).willReturn(integrationEvent);
 
-        // then
-        ArgumentCaptor<IntegrationEventPublishCommand> commandCaptor =
-                ArgumentCaptor.forClass(IntegrationEventPublishCommand.class);
+            // when
+            handler.handleBeforeCommit(domainEvent);
 
-        verify(registry).register(commandCaptor.capture());
+            // then
+            ArgumentCaptor<IntegrationEventPublishCommand> captor =
+                    ArgumentCaptor.forClass(IntegrationEventPublishCommand.class);
 
-        IntegrationEventPublishCommand command = commandCaptor.getValue();
+            verify(registry).register(captor.capture());
 
-        assertThat(command.event().getEventId())
-                .isEqualTo(domainEvent.getEventId());
+            IntegrationEventPublishCommand command = captor.getValue();
+            assertThat(command.policy()).isEqualTo(DeliveryPolicy.OUTBOX_REQUIRED);
+            assertThat(command.event().getEventId()).isEqualTo(domainEvent.getEventId());
+            assertThat(command.metadata()).isNotNull();
+            assertThat(command.metadata().aggregateId()).isEqualTo("course-123");
+            assertThat(command.metadata().aggregateEventType()).isEqualTo("CourseCreatedEvent");
+        }
 
-        assertThat(command.policy())
-                .isEqualTo(DeliveryPolicy.OUTBOX_REQUIRED);
+        @Test
+        @DisplayName("FIRE_AND_FORGET 정책이면 Registry에 등록하지 않는다")
+        void doesNotRegisterWhenFireAndForget() {
+            // given
+            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.FIRE_AND_FORGET);
 
-        assertThat(command.metadata().aggregateId())
-                .isEqualTo("course-123");
+            // when
+            handler.handleBeforeCommit(domainEvent);
 
-        assertThat(command.metadata().aggregateEventType())
-                .isEqualTo("CourseCreatedEvent");
+            // then
+            verify(registry, never()).register(any());
+        }
     }
 
-    @Test
-    @DisplayName("OUTBOX_REQUIRED 정책으로 publish된다")
-    void handle_withOutboxRequiredPolicy() {
-        // given
-        given(mapper.toIntegrationEvent(domainEvent)).willReturn(integrationEvent);
-        given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.OUTBOX_REQUIRED);
+    @Nested
+    @DisplayName("handleAfterCommit (FIRE_AND_FORGET)")
+    class HandleAfterCommit {
 
-        // when
-        handler.handle(domainEvent);
+        @Test
+        @DisplayName("FIRE_AND_FORGET 정책이면 Registry에 등록한다")
+        void registersWhenFireAndForget() {
+            // given
+            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.FIRE_AND_FORGET);
+            given(mapper.toIntegrationEvent(domainEvent)).willReturn(integrationEvent);
 
-        // then
-        ArgumentCaptor<IntegrationEventPublishCommand> captor =
-                ArgumentCaptor.forClass(IntegrationEventPublishCommand.class);
+            // when
+            handler.handleAfterCommit(domainEvent);
 
-        verify(registry).register(captor.capture());
+            // then
+            ArgumentCaptor<IntegrationEventPublishCommand> captor =
+                    ArgumentCaptor.forClass(IntegrationEventPublishCommand.class);
 
-        assertThat(captor.getValue().policy())
-                .isEqualTo(DeliveryPolicy.OUTBOX_REQUIRED);
-    }
+            verify(registry).register(captor.capture());
 
-    @Test
-    @DisplayName("FIRE_AND_FORGET 정책으로 publish된다")
-    void handle_withFireAndForgetPolicy() {
-        // given
-        given(mapper.toIntegrationEvent(domainEvent)).willReturn(integrationEvent);
-        given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.FIRE_AND_FORGET);
+            IntegrationEventPublishCommand command = captor.getValue();
+            assertThat(command.policy()).isEqualTo(DeliveryPolicy.FIRE_AND_FORGET);
+            assertThat(command.event().getEventId()).isEqualTo(domainEvent.getEventId());
+            assertThat(command.metadata()).isNull();
+        }
 
-        // when
-        handler.handle(domainEvent);
+        @Test
+        @DisplayName("OUTBOX_REQUIRED 정책이면 Registry에 등록하지 않는다")
+        void doesNotRegisterWhenOutboxRequired() {
+            // given
+            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.OUTBOX_REQUIRED);
 
-        // then
-        ArgumentCaptor<IntegrationEventPublishCommand> captor =
-                ArgumentCaptor.forClass(IntegrationEventPublishCommand.class);
+            // when
+            handler.handleAfterCommit(domainEvent);
 
-        verify(registry).register(captor.capture());
-
-        assertThat(captor.getValue().policy())
-                .isEqualTo(DeliveryPolicy.FIRE_AND_FORGET);
-
-        assertThat(captor.getValue().metadata())
-                .isNull(); // FIRE_AND_FORGET는 metadata 없음
+            // then
+            verify(registry, never()).register(any());
+        }
     }
 
     private CourseCreatedIntegrationEvent createIntegrationEvent(CourseCreatedEvent event) {

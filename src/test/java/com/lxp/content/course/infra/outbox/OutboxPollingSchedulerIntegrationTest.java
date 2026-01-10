@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.lxp.common.infrastructure.persistence.OutboxEvent;
-import net.javacrumbs.shedlock.core.LockProvider;
-import net.javacrumbs.shedlock.core.SimpleLock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,9 +15,6 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.RabbitMQContainer;
@@ -27,7 +22,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -49,14 +43,6 @@ class OutboxPollingSchedulerIntegrationTest {
         registry.add("spring.rabbitmq.password", rabbitMQ::getAdminPassword);
     }
 
-    @TestConfiguration
-    static class TestShedLockConfig {
-        @Bean
-        @Primary
-        public LockProvider testLockProvider() {
-            return lockConfiguration -> Optional.of((SimpleLock) () -> {});
-        }
-    }
 
     @Autowired
     private CourseOutboxRepository outboxRepository;

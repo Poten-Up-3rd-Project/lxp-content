@@ -22,25 +22,27 @@ public class CourseEventPublishingHandler {
     private final DeliveryPolicyResolver policyResolver;
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void handle(CrudEvent event) {
-        IntegrationEvent integrationEvent = mapper.toIntegrationEvent(event);
+    public void handleBeforeCommit(CrudEvent event) {
         DeliveryPolicy policy = policyResolver.resolve(event);
 
-        IntegrationEventPublishCommand command =
-                switch (policy) {
-                    case OUTBOX_REQUIRED ->
-                            IntegrationEventPublishCommand.outbox(
-                                    integrationEvent,
-                                    EventMetadata.from(event)
-                            );
+        if (policy == DeliveryPolicy.OUTBOX_REQUIRED) {
+            IntegrationEvent integrationEvent = mapper.toIntegrationEvent(event);
+            registry.register(IntegrationEventPublishCommand.outbox(
+                    integrationEvent,
+                    EventMetadata.from(event)
+            ));
+        }
+    }
 
-                    case FIRE_AND_FORGET ->
-                            IntegrationEventPublishCommand.fireAndForget(
-                                    integrationEvent
-                            );
-                };
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleAfterCommit(CrudEvent event) {
+        DeliveryPolicy policy = policyResolver.resolve(event);
 
-        registry.register(command);
-
+        if (policy == DeliveryPolicy.FIRE_AND_FORGET) {
+            IntegrationEvent integrationEvent = mapper.toIntegrationEvent(event);
+            registry.register(IntegrationEventPublishCommand.fireAndForget(
+                    integrationEvent
+            ));
+        }
     }
 }
