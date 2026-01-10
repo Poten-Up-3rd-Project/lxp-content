@@ -241,6 +241,67 @@ public class CourseReadPersistenceAdapterTest {
                 .containsExactly("Java 기초", "Spring 입문", "JPA 마스터");
     }
 
+
+    @Test
+    @DisplayName("ID로 존재 여부 확인 - 존재하는 경우")
+    void existsById_whenExists_returnsTrue() {
+        // given
+        adapter.save(createReadModel("course-1", "Java 기초"));
+
+        // when
+        Boolean exists = adapter.existsById("course-1");
+
+        // then
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    @DisplayName("ID로 존재 여부 확인 - 존재하지 않는 경우")
+    void existsById_whenNotExists_returnsFalse() {
+        // given
+        adapter.save(createReadModel("course-1", "Java 기초"));
+
+        // when
+        Boolean exists = adapter.existsById("course-999");
+
+        // then
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    @DisplayName("ID로 조회 - 존재하는 경우")
+    void findById_whenExists_returnsReadModel() {
+        // given
+        List<CourseReadModel.TagReadModel> tags = List.of(
+                new CourseReadModel.TagReadModel(1L, "Java", "#FF0000", "solid"),
+                new CourseReadModel.TagReadModel(2L, "Backend", "#00FF00", "outline")
+        );
+        CourseReadModel model = createReadModelWithTags("course-1", "Java 기초", tags);
+        adapter.save(model);
+
+        // when
+        Optional<CourseReadModel> result = adapter.findById("course-1");
+
+        // then
+        assertThat(result).isPresent();
+        assertThat(result.get().uuid()).isEqualTo("course-1");
+        assertThat(result.get().title()).isEqualTo("Java 기초");
+        assertThat(result.get().tags()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("ID로 조회 - 존재하지 않는 경우")
+    void findById_whenNotExists_returnsEmpty() {
+        // given
+        adapter.save(createReadModel("course-1", "Java 기초"));
+
+        // when
+        Optional<CourseReadModel> result = adapter.findById("course-999");
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
     private CourseReadModel createReadModel(String uuid, String title) {
         return createReadModel(uuid, title, "설명입니다");
     }
