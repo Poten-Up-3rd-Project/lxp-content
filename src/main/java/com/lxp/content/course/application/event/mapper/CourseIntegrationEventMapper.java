@@ -1,10 +1,10 @@
-package com.lxp.content.course.infra.event;
+package com.lxp.content.course.application.event.mapper;
 
 import com.lxp.common.application.event.IntegrationEvent;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
 import com.lxp.content.course.domain.event.CrudEvent;
-import com.lxp.content.course.infra.event.integration.CourseCreatedIntegrationEvent;
-import com.lxp.content.course.infra.event.integration.payload.CourseCreatedPayload;
+import com.lxp.content.course.application.event.integration.CourseCreatedIntegrationEvent;
+import com.lxp.content.course.application.event.integration.payload.CourseCreatedPayload;
 import org.springframework.stereotype.Component;
 
 @Component

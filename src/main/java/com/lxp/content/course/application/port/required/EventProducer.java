@@ -1,4 +1,4 @@
-package com.lxp.content.course.infra.messaging;
+package com.lxp.content.course.application.port.required;
 
 import com.lxp.common.application.event.IntegrationEvent;
 

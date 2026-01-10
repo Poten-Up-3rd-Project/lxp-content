@@ -3,7 +3,7 @@ package com.lxp.content.course.infra.outbox;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lxp.common.application.event.IntegrationEvent;
 import com.lxp.common.infrastructure.persistence.OutboxEvent;
-import com.lxp.content.course.infra.event.integration.CourseCreatedIntegrationEvent;
+import com.lxp.content.course.application.event.integration.CourseCreatedIntegrationEvent;
 import com.lxp.content.course.infra.messaging.exception.EventSerializationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
