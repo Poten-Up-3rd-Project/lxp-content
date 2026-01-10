@@ -1,7 +1,7 @@
 package com.lxp.content.progress.domain.service;
 
 import com.lxp.content.progress.domain.model.CourseProgress;
-import com.lxp.content.progress.domain.model.vo.CourseCompletionResult;
+import com.lxp.content.progress.domain.policy.CourseCompletionResult;
 import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.policy.CalculatePolicy;
 import com.lxp.content.progress.domain.policy.CompletionPolicy;
