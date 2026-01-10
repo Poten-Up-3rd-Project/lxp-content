@@ -2,9 +2,12 @@ package com.lxp.content.progress.domain.model;
 
 import com.lxp.common.domain.event.AggregateRoot;
 import com.lxp.content.progress.domain.model.enums.CourseProgressStatus;
-import com.lxp.content.progress.domain.model.vo.*;
-import com.lxp.content.progress.domain.policy.CalculatePolicy;
+import com.lxp.content.progress.domain.model.vo.CourseId;
+import com.lxp.content.progress.domain.model.vo.CourseProgressId;
+import com.lxp.content.progress.domain.model.vo.LectureId;
+import com.lxp.content.progress.domain.model.vo.UserId;
 import com.lxp.content.progress.domain.policy.CompletionPolicy;
+import com.lxp.content.progress.domain.policy.CourseCompletionResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,7 +18,6 @@ import java.util.Objects;
  */
 public class CourseProgress extends AggregateRoot<CourseProgressId> {
 
-    private Long id;
     private CourseProgressId courseProgressId;
     private UserId userId;
     private CourseId courseId;
@@ -43,6 +45,24 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
         );
     }
 
+    public static CourseProgress create(
+            CourseProgressId courseProgressId,
+            UserId userId,
+            CourseId courseId,
+            float totalProgress,
+            CourseProgressStatus courseProgressStatus,
+            LocalDateTime completedAt) {
+        return new CourseProgress(
+                courseProgressId,
+                userId,
+                courseId,
+                totalProgress,
+                courseProgressStatus,
+                completedAt,
+                null
+        );
+    }
+
     /**
      * 강좌 내 강의 진행 상태 업데이트
      * @param id 강의 ID
@@ -52,7 +72,6 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
     public void updateLectureProgress(LectureId id,
                                       Integer lastPlayedTimeInSeconds,
                                       CompletionPolicy policy) {
-
         LectureProgress lectureProgress = findLectureProgress(id);
         if(lectureProgress.completed()) return;
 
@@ -115,14 +134,20 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
         this.userId = userId;
     }
 
-    private CourseProgress(CourseProgressId courseProgressId, UserId userId, CourseId courseId, CourseProgressStatus progressStatus, float totalProgress, List<LectureProgress> lectureProgresses, LocalDateTime completedAt) {
+    private CourseProgress(
+                           CourseProgressId courseProgressId,
+                           UserId userId,
+                           CourseId courseId,
+                           float totalProgress,
+                           CourseProgressStatus courseProgressStatus,
+                           LocalDateTime completedAt,
+                           List<LectureProgress> lectureProgresses) {
         this.courseProgressId = courseProgressId;
         this.userId = userId;
         this.courseId = courseId;
-        this.courseProgressStatus = progressStatus;
         this.totalProgress = totalProgress;
-        this.lectureProgresses = lectureProgresses;
+        this.courseProgressStatus = courseProgressStatus;
         this.completedAt = completedAt;
+        this.lectureProgresses = lectureProgresses;
     }
-
 }

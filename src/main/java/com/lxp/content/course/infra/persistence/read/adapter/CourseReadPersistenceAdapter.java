@@ -35,8 +35,14 @@ public class CourseReadPersistenceAdapter implements CourseReadRepository {
     }
 
     @Override
-    public Optional<CourseReadModel> findById(Long aLong) {
-        return Optional.empty();
+    public Boolean existsById(String courseId) {
+        return courseReadJpaRepository.existsById(courseId);
+    }
+
+    @Override
+    public Optional<CourseReadModel> findById(String courseId) {
+        return courseReadJpaRepository.findById(courseId)
+                .map(courseReadMapper::toDomain);
     }
 
     @Override
