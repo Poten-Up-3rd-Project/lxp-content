@@ -20,6 +20,9 @@ public class CourseProgressId extends ValueObject {
     public static CourseProgressId create() {
         return new CourseProgressId(java.util.UUID.randomUUID().toString());
     }
+    public static CourseProgressId create(String value) {
+        return new CourseProgressId(value);
+    }
 
     public String value() {
         return value;
