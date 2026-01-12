@@ -1,4 +1,4 @@
-package com.lxp.content.course.infra.event.integration.payload;
+package com.lxp.content.course.application.event.integration.payload;
 
 import java.util.List;
 

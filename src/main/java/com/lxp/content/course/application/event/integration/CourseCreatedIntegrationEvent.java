@@ -1,11 +1,11 @@
-package com.lxp.content.course.infra.event.integration;
+package com.lxp.content.course.application.event.integration;
 
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lxp.common.application.event.BaseIntegrationEventEnvelope;
-import com.lxp.content.course.infra.event.integration.payload.CourseCreatedPayload;
+import com.lxp.content.course.application.event.integration.payload.CourseCreatedPayload;
 
 import java.time.LocalDateTime;
 
