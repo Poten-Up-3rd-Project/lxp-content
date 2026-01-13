@@ -3,7 +3,7 @@ package com.lxp.content.course.infra.messaging.producer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lxp.common.application.event.IntegrationEvent;
-import com.lxp.content.course.infra.messaging.EventProducer;
+import com.lxp.content.course.application.port.required.EventProducer;
 import com.lxp.content.course.infra.messaging.exception.EventPublishException;
 import com.lxp.content.course.infra.messaging.exception.EventSerializationException;
 import lombok.RequiredArgsConstructor;
