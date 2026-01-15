@@ -1,44 +1,26 @@
 spring:
-  application:
-    name: content-service
+  docker:
+    compose:
+      enabled: true
   datasource:
     url: jdbc:mysql://localhost:3308/lxp_content?sslMode=DISABLED&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     username: lxp
     password: lxp
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        highlight_sql: true
-
   data:
     redis:
       host: localhost
       port: 6379
-
   rabbitmq:
     host: localhost
     port: 5672
     username: lxp
     password: lxp
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      probes:
-        enabled: true
+services:
+  user:
+    url: http://localhost:8081
 
-outbox:
-  polling:
-    interval: 5000
-  retry:
-    interval: 60000
+passport:
+  key:
+    secret-key: local-secret-key-for-testing-minimum-32chars

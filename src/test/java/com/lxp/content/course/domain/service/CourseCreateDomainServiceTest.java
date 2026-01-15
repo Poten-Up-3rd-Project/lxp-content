@@ -96,22 +96,6 @@ public class CourseCreateDomainServiceTest {
     @DisplayName("Course 생성 실패 - Instructor 검증")
     class CreateFailInstructor {
 
-        @Test
-        @DisplayName("Instructor 상태가 ACTIVE가 아니면 예외 발생")
-        void create_InstructorNotActive_ThrowsException() {
-            // Given
-            var command = createValidCommand();
-            var instructor = new InstructorSpec(
-                    "instructor-uuid",
-                    "강사이름",
-                    "INSTRUCTOR",
-                    "INACTIVE"
-            );
-
-            // When & Then
-            assertThatThrownBy(() -> domainService.create(command, instructor))
-                    .isInstanceOf(CourseException.class);
-        }
 
         @Test
         @DisplayName("Instructor 역할이 INSTRUCTOR가 아니면 예외 발생")
@@ -121,8 +105,7 @@ public class CourseCreateDomainServiceTest {
             var instructor = new InstructorSpec(
                     "instructor-uuid",
                     "ACTIVE",
-                    "STUDENT" ,
-                    "ACTIVE"
+                    "STUDENT"
             );
 
             // When & Then
@@ -212,8 +195,7 @@ public class CourseCreateDomainServiceTest {
         return new InstructorSpec(
                 "instructor-uuid",
                 "test",
-                "INSTRUCTOR",
-                "ACTIVE"
+                "INSTRUCTOR"
         );
     }
 }

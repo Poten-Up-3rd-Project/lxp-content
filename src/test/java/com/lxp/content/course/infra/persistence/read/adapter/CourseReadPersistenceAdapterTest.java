@@ -6,9 +6,10 @@ import com.lxp.common.domain.pagination.PageRequest;
 import com.lxp.common.domain.pagination.Sort;
 import com.lxp.content.course.application.projection.CourseReadModel;
 import com.lxp.content.course.domain.model.enums.Level;
-import com.lxp.content.course.infra.persistence.read.entity.CourseReadJpaEntity;
-import com.lxp.content.course.infra.persistence.read.mapper.CourseReadEntityMapper;
-import com.lxp.content.course.infra.persistence.read.repository.CourseReadJpaRepository;
+import com.lxp.content.course.infra.persistence.mysql.read.adapter.CourseReadPersistenceAdapter;
+import com.lxp.content.course.infra.persistence.mysql.read.entity.CourseReadJpaEntity;
+import com.lxp.content.course.infra.persistence.mysql.read.mapper.CourseReadEntityMapper;
+import com.lxp.content.course.infra.persistence.mysql.read.repository.CourseReadJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,10 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @EnableJpaRepositories(
-        basePackages = "com.lxp.content.course.infra.persistence.read"
+        basePackages = "com.lxp.content.course.infra.persistence.mysql.read"
 )
 @EntityScan(
-        basePackages = "com.lxp.content.course.infra.persistence.read"
+        basePackages = "com.lxp.content.course.infra.persistence.mysql.read"
 )
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnableJpaAuditing

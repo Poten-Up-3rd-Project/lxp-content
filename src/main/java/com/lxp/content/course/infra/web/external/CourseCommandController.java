@@ -8,10 +8,9 @@ import com.lxp.content.course.infra.web.external.dto.response.CourseDetailRespon
 import com.lxp.content.course.infra.web.external.mapper.CourseWebMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api-v1/courses")
@@ -20,9 +19,10 @@ public class CourseCommandController {
     private final CourseWebMapper mapper;
     private final CourseCreateUseCase createUseCase;
 
-    // TODO : 인증 적용 후 userId 주입
-    @GetMapping
-    public ResponseEntity<CourseDetailResponse> create(String userId, @RequestBody CourseCreateRequest request) {
+    @PreAuthorize("hasRole('INSTRUCTOR')")
+    @PostMapping
+    public ResponseEntity<CourseDetailResponse> create(@AuthenticationPrincipal String userId,
+                                                       @RequestBody CourseCreateRequest request) {
         CourseCreateCommand command = mapper.toCreateCommand(userId,request);
         CourseDetailView view = createUseCase.execute(command);
         return ResponseEntity.ok(mapper.toDetailResponse(view));
