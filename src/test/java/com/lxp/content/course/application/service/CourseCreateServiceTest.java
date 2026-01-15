@@ -8,7 +8,7 @@ import com.lxp.content.course.application.port.required.dto.InstructorResult;
 import com.lxp.content.course.application.port.required.dto.TagResult;
 import com.lxp.content.course.application.service.command.CourseCreateService;
 import com.lxp.content.course.domain.model.enums.Level;
-import com.lxp.content.course.infra.persistence.read.repository.CourseReadJpaRepository;
+import com.lxp.content.course.infra.persistence.mysql.read.repository.CourseReadJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +44,7 @@ public class CourseCreateServiceTest {
                 .thenReturn(new InstructorResult(
                         "instructor-1",
                         "홍길동",
-                        "INSTRUCTOR",
-                        "ACTIVE"
+                        "INSTRUCTOR"
                 ));
 
         when(tagQueryPort.findTagByIds(List.of(1L, 2L)))
