@@ -51,7 +51,8 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
             CourseId courseId,
             float totalProgress,
             CourseProgressStatus courseProgressStatus,
-            LocalDateTime completedAt) {
+            LocalDateTime completedAt,
+            List<LectureProgress> lectureProgresses) {
         return new CourseProgress(
                 courseProgressId,
                 userId,
@@ -59,7 +60,7 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
                 totalProgress,
                 courseProgressStatus,
                 completedAt,
-                null
+                lectureProgresses
         );
     }
 
