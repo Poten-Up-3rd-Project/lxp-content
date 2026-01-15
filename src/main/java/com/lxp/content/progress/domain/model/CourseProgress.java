@@ -8,6 +8,8 @@ import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.UserId;
 import com.lxp.content.progress.domain.policy.CompletionPolicy;
 import com.lxp.content.progress.domain.policy.CourseCompletionResult;
+import com.lxp.content.progress.exception.ProgressDomainException;
+import com.lxp.content.progress.exception.ProgressErrorCode;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,6 +86,8 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
 
         if(result.isCompleted()) {
             complete();
+        } else if(result.totalProgress() > 0.0f) {
+            inProgress();
         }
     }
 
@@ -93,6 +97,10 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
      */
     public boolean isCompleted() {
         return (this.courseProgressStatus == CourseProgressStatus.COMPLETED && this.totalProgress == 100.0f);
+    }
+
+    private void inProgress() {
+        this.courseProgressStatus = CourseProgressStatus.IN_PROGRESS;
     }
 
     private void complete() {
@@ -108,7 +116,7 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
     private LectureProgress findLectureProgress(LectureId id) {
         return lectureProgresses.stream()
                 .filter(lecProgress -> lecProgress.lectureId().equals(id))
-                .findAny().orElseThrow(() -> new IllegalArgumentException("해당 LectureProgressID에 해당하는 LectureProgress가 없습니다. : " + id.value()));
+                .findAny().orElseThrow(() -> new ProgressDomainException(ProgressErrorCode.LECTURE_PROGRESS_NOT_FOUND));
     }
 
     @Override
