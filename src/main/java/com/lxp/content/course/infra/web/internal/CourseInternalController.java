@@ -6,6 +6,8 @@ import com.lxp.content.course.application.port.provider.usecase.query.CheckCours
 import com.lxp.content.course.application.port.provider.usecase.query.CourseFilterUseCase;
 import com.lxp.content.course.application.port.provider.view.CourseView;
 import com.lxp.content.course.infra.web.external.dto.response.CourseResponse;
+import com.lxp.content.course.infra.web.internal.dto.CourseFilterRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -34,15 +36,15 @@ public class CourseInternalController {
     }
 
 
-    //TODO(필드 늘어나면 객체로 관리)
-    @GetMapping("/get-by-filters")
+    @PostMapping("/filter")
     public ResponseEntity<List<CourseView>> filter(
-            @RequestParam(value= "ids", required = false) List<String> ids,
-            @RequestParam(value = "difficulties", required = false) List<String> levels,
-            @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(100) int count    ) {
+            @RequestBody @Valid CourseFilterRequest request) { // RequestBody로 변경
 
-        CourseFilterQuery query =
-                new CourseFilterQuery(ids, levels, count);
+        CourseFilterQuery query = new CourseFilterQuery(
+                request.ids(),
+                request.difficulties(),
+                request.limit()
+        );
 
         var result = courseFilterUseCase.execute(query);
         return ResponseEntity.ok(result);
