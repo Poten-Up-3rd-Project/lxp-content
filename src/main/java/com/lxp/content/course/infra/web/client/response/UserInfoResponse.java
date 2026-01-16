@@ -1,13 +1,14 @@
 package com.lxp.content.course.infra.web.client.response;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 public record UserInfoResponse(
         String id,
         String name,
         String email,
         String role,
-        List<Long> tagIds,
-        String level
+        String status,
+        LocalDateTime deletedAt
 ) {
 }
+

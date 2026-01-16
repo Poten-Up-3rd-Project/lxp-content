@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PassportAuthenticationFilter extends OncePerRequestFilter {
@@ -35,6 +37,10 @@ public class PassportAuthenticationFilter extends OncePerRequestFilter {
             try {
                 PassportClaims claims = verifier.verify(encodedPassport);
 
+                log.info("=== Passport Debug ===");
+                log.info("UserId: {}", claims.userId());
+                log.info("Raw roles: {}", claims.roles());
+
                 // UsernamePasswordAuthenticationToken 생성
                 // principal: userId, credentials: Passport JWT, authorities: 권한 목록
                 UsernamePasswordAuthenticationToken authentication =
@@ -42,7 +48,7 @@ public class PassportAuthenticationFilter extends OncePerRequestFilter {
                                 claims.userId(),
                                 encodedPassport,  // Credentials에 JWT 저장
                                 claims.roles().stream()
-                                        .map(SimpleGrantedAuthority::new)
+                                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                                         .toList()
                         );
 

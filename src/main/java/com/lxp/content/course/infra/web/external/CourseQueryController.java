@@ -27,7 +27,7 @@ public class CourseQueryController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<CourseResponse>> search(
-            @RequestParam(value = "keyword") String keyword,
+            @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value ="sort", defaultValue = "createdAt") String sort,

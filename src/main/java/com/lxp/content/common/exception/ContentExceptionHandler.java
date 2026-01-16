@@ -26,10 +26,9 @@ public class ContentExceptionHandler extends GlobalExceptionHandler {
         log.warn("Validation failed: {}", message);
 
         return ResponseEntity.badRequest().body(
-                new ErrorResponse("VALIDATION_ERROR", message, "INVALID")
+                new ErrorResponse("VALIDATION_ERROR", message, "BAD_REQUEST")
         );
     }
-
 
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<ErrorResponse> handleExternalApi(ExternalApiException e) {
@@ -40,7 +39,7 @@ public class ContentExceptionHandler extends GlobalExceptionHandler {
                 new ErrorResponse(
                         "EXTERNAL_API_ERROR",
                         e.getServiceName() + " 서비스 호출 실패",
-                        "INTERNAL_SERVER_ERROR"
+                        "SERVICE_UNAVAILABLE"
                 )
         );
     }
@@ -53,7 +52,7 @@ public class ContentExceptionHandler extends GlobalExceptionHandler {
                 new ErrorResponse(
                         "SERVICE_UNAVAILABLE",
                         e.getServiceName() + " 서비스에 연결할 수 없습니다",
-                        "INTERNAL_SERVER_ERROR"
+                        "SERVICE_UNAVAILABLE"
                 )
         );
     }
@@ -63,7 +62,7 @@ public class ContentExceptionHandler extends GlobalExceptionHandler {
         log.warn("Method not supported: {}", e.getMethod());
 
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(
-                new ErrorResponse("METHOD_NOT_ALLOWED", "지원하지 않는 HTTP 메서드입니다", "BAD_REQUEST")
+                new ErrorResponse("METHOD_NOT_ALLOWED", "지원하지 않는 HTTP 메서드입니다", "METHOD_NOT_ALLOWED")
         );
     }
 
@@ -81,10 +80,9 @@ public class ContentExceptionHandler extends GlobalExceptionHandler {
         log.error("Unexpected error", e);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ErrorResponse("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다", "INTERNAL_SERVER_ERROR")
+                new ErrorResponse("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다", "INTERNAL_ERROR")
         );
     }
-
 
     private String formatFieldError(FieldError error) {
         return String.format("%s: %s", error.getField(), error.getDefaultMessage());
