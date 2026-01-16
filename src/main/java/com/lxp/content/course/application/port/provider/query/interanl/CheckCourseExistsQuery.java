@@ -1,6 +1,0 @@
-package com.lxp.content.course.application.port.provider.query.interanl;
-
-import com.lxp.common.application.cqrs.Query;
-
-public record CheckCourseExistsQuery(String courseId) implements Query<Boolean> {
-}
