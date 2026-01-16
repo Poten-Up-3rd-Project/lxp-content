@@ -6,7 +6,7 @@ public enum LikeErrorCode implements ErrorCode {
 
     USER_ID_IS_NULL("LIKE_001", "must be not null: userId", "CONFLICT"),
     COURSE_ID_IS_NULL("LIKE_002", "must be not null: courseId", "CONFLICT"),
-    ;
+    COURSE_NOT_FOUND("LIKE_003", "강좌를 찾을 수 없습니다.", "NOT_FOUND");
 
     private final String code;
     private final String message;
