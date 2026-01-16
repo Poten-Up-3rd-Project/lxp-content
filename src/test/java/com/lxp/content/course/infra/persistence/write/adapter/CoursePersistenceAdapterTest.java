@@ -7,8 +7,9 @@ import com.lxp.content.course.domain.model.collection.CourseTags;
 import com.lxp.content.course.domain.model.enums.Level;
 import com.lxp.content.course.domain.model.id.*;
 import com.lxp.content.course.domain.model.vo.duration.LectureDuration;
-import com.lxp.content.course.infra.persistence.write.mapper.CourseEntityMapper;
-import com.lxp.content.course.infra.persistence.write.repository.CourseJpaRepository;
+import com.lxp.content.course.infra.persistence.mysql.write.adapter.CoursePersistenceAdapter;
+import com.lxp.content.course.infra.persistence.mysql.write.mapper.CourseEntityMapper;
+import com.lxp.content.course.infra.persistence.mysql.write.repository.CourseJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,10 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnableJpaRepositories(
-        basePackages = "com.lxp.content.course.infra.persistence.write"
+        basePackages = "com.lxp.content.course.infra.persistence.mysql.write"
 )
 @EntityScan(
-        basePackages = "com.lxp.content.course.infra.persistence.write"
+        basePackages = "com.lxp.content.course.infra.persistence.mysql.write"
 )
 @EnableJpaAuditing
 public class CoursePersistenceAdapterTest {

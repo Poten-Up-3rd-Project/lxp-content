@@ -3,7 +3,6 @@ package com.lxp.content.course.infra.web.external;
 import com.lxp.common.domain.pagination.Page;
 import com.lxp.common.domain.pagination.PageRequest;
 import com.lxp.common.domain.pagination.Sort;
-import com.lxp.common.infrastructure.exception.ApiResponse;
 import com.lxp.content.course.application.port.provider.query.CourseDetailQuery;
 import com.lxp.content.course.application.port.provider.query.CourseSearchQuery;
 import com.lxp.content.course.application.port.provider.usecase.query.CourseDetailUseCase;
@@ -28,14 +27,12 @@ public class CourseQueryController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<CourseResponse>> search(
-            @RequestParam(value = "keyword") String keyword,
+            @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value ="sort", defaultValue = "createdAt") String sort,
             @RequestParam(value = "dir", defaultValue = "DESC") String dir
     ) {
-        System.out.println("keyword = " + keyword);
-
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(dir.toUpperCase()), sort));
         CourseSearchQuery query = new CourseSearchQuery(keyword, pageRequest);
         Page<CourseView> view = courseSearchUseCase.execute(query);
