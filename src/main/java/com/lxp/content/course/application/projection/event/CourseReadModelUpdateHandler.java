@@ -12,6 +12,7 @@ import com.lxp.content.course.domain.event.CrudEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class CourseReadModelUpdateHandler implements ReadModelUpdater<CrudEvent>
     private final TagQueryPort tagQueryPort;
 
 
+    @Async("readModelExecutor")
     @Retryable(
             retryFor = ExternalServiceException.class,  // common에서 가져옴
             maxAttempts = 3,
