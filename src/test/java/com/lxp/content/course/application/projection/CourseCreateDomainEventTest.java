@@ -11,7 +11,7 @@ import com.lxp.content.course.application.port.required.dto.InstructorResult;
 import com.lxp.content.course.application.port.required.dto.TagResult;
 import com.lxp.content.course.application.projection.repository.CourseReadRepository;
 import com.lxp.content.course.domain.model.enums.Level;
-import com.lxp.content.course.infra.messaging.EventProducer;
+import com.lxp.content.course.application.port.required.EventProducer;
 import com.lxp.content.course.infra.persistence.read.repository.CourseReadJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
