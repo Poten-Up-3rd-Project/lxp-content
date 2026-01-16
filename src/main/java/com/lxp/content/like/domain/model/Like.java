@@ -39,9 +39,8 @@ public class Like extends AggregateRoot<Long> {
     @Column(nullable = false, updatable = false)
     private UUID courseId;
 
-    @CreatedDate
     @Column(nullable = false, updatable = false)
-    private Instant likedAt;
+    private Instant createdAt;
 
     public Like(UUID userId, UUID courseId) {
 
