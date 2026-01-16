@@ -39,7 +39,7 @@ public class CourseInternalController {
     }
 
 
-    @GetMapping("/filter")
+    @PostMapping("/filter")
     public ResponseEntity<List<CourseView>> filter(
             @RequestBody @Valid CourseFilterRequest request) { // RequestBody로 변경
 
