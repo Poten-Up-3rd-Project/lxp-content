@@ -73,6 +73,7 @@ public class CourseProgress extends AggregateRoot<CourseProgressId> {
     public void updateLectureProgress(LectureId id,
                                       Integer lastPlayedTimeInSeconds,
                                       CompletionPolicy policy) {
+
         LectureProgress lectureProgress = findLectureProgress(id);
         if(lectureProgress.completed()) return;
 
