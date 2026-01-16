@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
@@ -29,7 +30,9 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
+@ActiveProfiles("test")
 public class CourseCreateDomainEventTest {
+
     @Autowired
     private CourseCreateUseCase courseCreateUseCase;
 
@@ -45,14 +48,11 @@ public class CourseCreateDomainEventTest {
     @MockitoBean
     private TagQueryPort tagQueryPort;
 
-
     @MockitoBean
     private EventProducer eventProducer;
 
     @BeforeEach
     void setUp() {
-
-        // Mock 설정
         when(userQueryPort.getInstructorInfo("instructor-1"))
                 .thenReturn(new InstructorResult(
                         "instructor-1",
@@ -70,25 +70,29 @@ public class CourseCreateDomainEventTest {
     }
 
     @Test
-    @DisplayName("Course 생성 시 ReadModel이 생성된다")
-    void createCourse_createsReadModel() {
+    @DisplayName("Course 생성 시 ReadModel이 비동기로 생성된다")
+    void createCourse_createsReadModelAsync() {
         // given
         CourseCreateCommand command = createDefaultCommand();
+
+        // when
         courseCreateUseCase.execute(command);
 
-        // then - 이벤트 발행 후 ReadModel 생성 확인
-        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
-            Page<CourseReadModel> readModels = courseReadRepository.findAll(PageRequest.of(0, 10));
+        // then - 비동기 처리이므로 awaitility로 대기
+        await()
+                .atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    Page<CourseReadModel> readModels = courseReadRepository.findAll(PageRequest.of(0, 10));
 
-            assertThat(readModels.content()).hasSize(1);
+                    assertThat(readModels.content()).hasSize(1);
 
-            CourseReadModel readModel = readModels.content().get(0);
-            assertThat(readModel.title()).isEqualTo("Java 기초");
-            assertThat(readModel.instructorName()).isEqualTo("홍길동");
-            assertThat(readModel.tags()).hasSize(2);
-        });
+                    CourseReadModel readModel = readModels.content().get(0);
+                    assertThat(readModel.title()).isEqualTo("Java 기초");
+                    assertThat(readModel.instructorName()).isEqualTo("홍길동");
+                    assertThat(readModel.tags()).hasSize(2);
+                });
     }
-
 
     @Test
     @DisplayName("Course 생성 시 반환된 View와 ReadModel이 일치한다")
@@ -99,17 +103,39 @@ public class CourseCreateDomainEventTest {
         // when
         CourseDetailView result = courseCreateUseCase.execute(command);
 
-        // then
-        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            Optional<CourseReadModel> readModel = courseReadRepository.search(
-                    "Java",
-                    PageRequest.of(0, 10)
-            ).content().stream().findFirst();
+        // then - 비동기 처리 완료 대기
+        await()
+                .atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    Optional<CourseReadModel> readModel = courseReadRepository.search(
+                            "Java",
+                            PageRequest.of(0, 10)
+                    ).content().stream().findFirst();
 
-            assertThat(readModel).isPresent();
-            assertThat(readModel.get().uuid()).isEqualTo(result.courseId());
-            assertThat(readModel.get().title()).isEqualTo(result.title());
-        });
+                    assertThat(readModel).isPresent();
+                    assertThat(readModel.get().uuid()).isEqualTo(result.courseId());
+                    assertThat(readModel.get().title()).isEqualTo(result.title());
+                });
+    }
+
+    @Test
+    @DisplayName("Course 생성 API는 ReadModel 생성을 기다리지 않고 즉시 반환한다")
+    void createCourse_returnsImmediately() {
+        // given
+        CourseCreateCommand command = createDefaultCommand();
+
+        // when
+        long startTime = System.currentTimeMillis();
+        CourseDetailView result = courseCreateUseCase.execute(command);
+        long executionTime = System.currentTimeMillis() - startTime;
+
+        // then - 동기 처리 시간만 소요 (비동기 작업 제외)
+        assertThat(result).isNotNull();
+        assertThat(executionTime).isLessThan(1000L);  // 1초 미만
+
+        // ReadModel은 아직 생성 안 됐을 수 있음 (비동기)
+        // 필요 시 awaitility로 별도 확인
     }
 
     private CourseCreateCommand createDefaultCommand() {
