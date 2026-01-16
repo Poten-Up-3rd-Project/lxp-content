@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class CourseProgressPersistenceAdapterTest {
 
     @TestConfiguration
-    // 1. 필요한 리포지토리만 수동 스캔 또는 빈 등록
     @EnableJpaRepositories(basePackageClasses = JpaCourseProgressRepository.class)
     @Import({
             CourseProgressPersistenceAdapter.class,
@@ -56,7 +55,7 @@ class CourseProgressPersistenceAdapterTest {
 
     @Test
     @DisplayName("TC-CPPA-001: 새로운 강좌 진행도를 저장하면 DB에 정상적으로 Insert 된다")
-    void shouldSaveNewCourseProgress() {
+    void shouldInsertDatabase_WhenSaveCourseProgress() {
         // given
         String bizId = randomId();
         CourseProgress domain = CourseProgress.create(
@@ -82,7 +81,7 @@ class CourseProgressPersistenceAdapterTest {
 
     @Test
     @DisplayName("TC-CPPA-002: 기존 진행도를 수정하면 save() 호출 없이도 변경 감지(Dirty Checking)로 업데이트 된다")
-    void shouldUpdateExistingProgressUsingDirtyChecking() {
+    void shouldUpdateExistingProgressUsingDirtyChecking_WhenModifyProgress() {
         // given: 초기 데이터 저장
         String bizId = randomId();
         CourseId courseId = new CourseId(randomId());
@@ -123,7 +122,7 @@ class CourseProgressPersistenceAdapterTest {
 
     @Test
     @DisplayName("TC-CPPA-003: 자식인 LectureProgress를 추가하면 Cascade에 의해 함께 저장된다")
-    void shouldSaveChildrenTogetherWithCascade() {
+    void shouldSaveChildrenTogetherWithCascade_WhenAddLectureProgress() {
         // given
         String bizId = randomId();
         String lecId = randomId();
@@ -161,7 +160,7 @@ class CourseProgressPersistenceAdapterTest {
 
     @Test
     @DisplayName("TC-CPPA-004: 부모(CourseProgress)를 삭제하면 자식(LectureProgress)들도 함께 삭제된다")
-    void shouldDeleteChildrenWhenParentIsDeleted() {
+    void shouldDeleteChildren_WhenParentIsDeleted() {
         // given: 부모와 자식이 포함된 데이터 저장
         String bizId = randomId();
         String lecId = randomId();
@@ -204,7 +203,7 @@ class CourseProgressPersistenceAdapterTest {
 
     @Test
     @DisplayName("TC-CPPA-005: 부모의 자식 리스트에서 특정 항목을 제거하면 DB에서도 해당 자식이 삭제된다 (Orphan Removal)")
-    void shouldDeleteOrphanWhenRemovedFromList() {
+    void shouldDeleteOrphan_WhenRemovedFromList() {
         // given: 자식이 2개인 상태로 저장
         String bizId = randomId();
         String lecPgId1 = randomId();

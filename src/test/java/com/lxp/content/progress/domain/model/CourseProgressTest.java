@@ -9,6 +9,8 @@ import com.lxp.content.progress.domain.policy.CalculatePolicy;
 import com.lxp.content.progress.domain.policy.CompletionPolicy;
 import com.lxp.content.progress.domain.policy.DefaultCalculatePolicy;
 import com.lxp.content.progress.domain.policy.DefaultCompletionPolicy;
+import com.lxp.content.progress.exception.ProgressDomainException;
+import com.lxp.content.progress.exception.ProgressErrorCode;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -116,8 +118,14 @@ class CourseProgressTest {
             LectureId unknownId = new LectureId("unknown");
 
             // when & then
-            assertThrows(IllegalArgumentException.class, () -> courseProgress.updateLectureProgress(unknownId, 50, completionPolicy),
+            assertThrows(ProgressDomainException.class, () -> courseProgress.updateLectureProgress(unknownId, 50, completionPolicy),
                     "해당 LectureProgressID에 해당하는 LectureProgress가 없습니다.");
+            assertEquals(
+                    ProgressErrorCode.LECTURE_PROGRESS_NOT_FOUND.getCode(),
+                    assertThrows(ProgressDomainException.class, () -> courseProgress.updateLectureProgress(unknownId, 50, completionPolicy))
+                            .getErrorCode().getCode(),
+                    "올바른 에러 코드가 반환되어야 한다"
+            );
         }
     }
 
