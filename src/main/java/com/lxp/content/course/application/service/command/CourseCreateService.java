@@ -64,8 +64,7 @@ public class CourseCreateService implements CourseCreateUseCase {
         return new InstructorSpec(
                 input.userId(),
                 input.name(),
-                input.role(),
-                input.status()
+                input.role()
                 );
     }
 
