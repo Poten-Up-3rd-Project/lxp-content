@@ -1,6 +1,7 @@
 package com.lxp.content.progress.exception;
 
 import com.lxp.content.common.exception.ExternalServiceException;
+import org.springframework.http.HttpStatus;
 
 /**
  * Progress 도메인 예외 클래스

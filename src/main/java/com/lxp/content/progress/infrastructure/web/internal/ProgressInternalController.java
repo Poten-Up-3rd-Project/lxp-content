@@ -3,29 +3,34 @@ package com.lxp.content.progress.infrastructure.web.internal;
 import com.lxp.content.progress.application.mapper.ProgressWebMapper;
 import com.lxp.content.progress.application.port.in.response.CourseProgressInfo;
 import com.lxp.content.progress.application.port.in.response.LectureProgressInfo;
+import com.lxp.content.progress.application.port.in.usecase.CreateCourseProgressUseCase;
 import com.lxp.content.progress.application.port.in.usecase.GetActiveCourseProgressUseCase;
 import com.lxp.content.progress.application.port.in.usecase.GetLectureProgressListUseCase;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api-v1/internal/progress")
+@RequestMapping("/internal/api-v1/progress")
 public class ProgressInternalController {
 
     private final GetActiveCourseProgressUseCase getActiveCourseProgressUseCase;
     private final GetLectureProgressListUseCase getLectureProgressListUseCase;
+    private final CreateCourseProgressUseCase createCourseProgressUseCase;
 
     private final ProgressWebMapper mapper;
 
     public ProgressInternalController(
             GetActiveCourseProgressUseCase getActiveCourseProgressUseCase,
             GetLectureProgressListUseCase getLectureProgressListUseCase,
+            CreateCourseProgressUseCase createCourseProgressUseCase,
             ProgressWebMapper mapper
     ) {
         this.getActiveCourseProgressUseCase = getActiveCourseProgressUseCase;
         this.getLectureProgressListUseCase = getLectureProgressListUseCase;
+        this.createCourseProgressUseCase = createCourseProgressUseCase;
         this.mapper = mapper;
     }
 
@@ -50,6 +55,20 @@ public class ProgressInternalController {
         return ResponseEntity.ok(getLectureProgressListUseCase.execute(
                 mapper.toGetLectureProgressListQuery(userId, courseId)
         ));
+    }
+
+    @PostMapping("/{courseId}")
+    public ResponseEntity<Void> createProgress(
+            @RequestHeader("X-Passport") String userId,
+            @PathVariable String courseId) {
+        createCourseProgressUseCase.execute(
+                mapper.toCreateCourseProgressCommand(
+                        userId,
+                        courseId
+                )
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
 }
