@@ -1,6 +1,10 @@
 package com.lxp.content.progress;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lxp.content.common.passport.PassportClaims;
+import com.lxp.content.common.passport.PassportExtractor;
+import com.lxp.content.common.passport.PassportVerifier;
+import com.lxp.content.course.application.port.provider.usecase.query.CourseDetailUseCase;
 import com.lxp.content.progress.application.mapper.ProgressWebMapper;
 import com.lxp.content.progress.application.port.in.query.GetLectureProgressListQuery;
 import com.lxp.content.progress.domain.model.enums.CourseProgressStatus;
@@ -19,16 +23,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,6 +56,12 @@ public class CourseProgressIntegrationTest {
     @Autowired
     private ProgressWebMapper progressWebMapper;
 
+    @MockitoBean
+    private CourseDetailUseCase courseDetailUseCase;
+
+    @MockitoBean
+    private PassportVerifier passportVerifier;
+
     private String userId;
     private String courseId;
     private String lectureId1, lectureId2;
@@ -62,6 +74,15 @@ public class CourseProgressIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        PassportClaims mockPassport = new PassportClaims(
+            "user-123",
+            List.of("ROLE_USER"),
+            UUID.randomUUID().toString()
+        );
+
+        given(passportVerifier.verify(anyString()))
+                .willReturn(mockPassport);
+
         userId = UUID.randomUUID().toString();
         courseId = UUID.randomUUID().toString();
         lectureId1 = UUID.randomUUID().toString();
@@ -228,14 +249,20 @@ public class CourseProgressIntegrationTest {
         // Given
         String invalidCourseId = "non-existent-id";
 
+        given(courseDetailUseCase.execute(any()))
+                .willThrow(new ProgressDomainException(ProgressErrorCode.COURSE_PROGRESS_NOT_FOUND));
+
         // When & Then
         // Service 로직 상 .orElseThrow()가 발생하므로, 전역 예외 처리기(GlobalExceptionHandler) 설정에 따라
         // 400 혹은 500 응답이 오는지 확인합니다.
         mockMvc.perform(get("/api-v1/internal/progress/users/courses/{courseId}", invalidCourseId)
-            .header("X-Passport", userId)   //TODO 인증 정보에서 사용자 ID 가져오기
+            .header("X-Passport", userId)
         )
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$").value(ProgressErrorCode.COURSE_PROGRESS_NOT_FOUND.getMessage()));
+            .andDo(print()) // 응답 구조 확인용
+            .andExpect(status().isNotFound()) // 404 확인
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("PROGRESS_001")) // Enum에 정의된 코드
+            .andExpect(jsonPath("$.error.message").value(ProgressErrorCode.COURSE_PROGRESS_NOT_FOUND.getMessage()));
     }
 
 }

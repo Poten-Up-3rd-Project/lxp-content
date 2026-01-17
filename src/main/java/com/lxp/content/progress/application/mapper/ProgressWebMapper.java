@@ -1,5 +1,6 @@
 package com.lxp.content.progress.application.mapper;
 
+import com.lxp.content.progress.application.port.in.command.CreateProgressCommand;
 import com.lxp.content.progress.application.port.in.command.UpdateProgressCommand;
 import com.lxp.content.progress.application.port.in.query.GetActiveCourseProgressQuery;
 import com.lxp.content.progress.application.port.in.query.GetLectureProgressListQuery;
@@ -17,10 +18,11 @@ public class ProgressWebMapper {
 
     /**
      * Web Request -> Command 변환
-     * @param userId 사용자 ID
-     * @param courseId 강좌 ID
+     *
+     * @param userId    사용자 ID
+     * @param courseId  강좌 ID
      * @param lectureId 강의 ID
-     * @param request 요청 본문
+     * @param request   요청 본문
      * @return 진행률 업데이트 커맨드
      */
     public UpdateProgressCommand toCommand(String userId, String courseId, String lectureId, UpdateProgressRequest request) {
@@ -29,6 +31,7 @@ public class ProgressWebMapper {
 
     /**
      * Web Request -> Query 변환(강좌 진행률 조회 리스트)
+     *
      * @param userId 사용자 ID
      * @return 수강중인 강좌 진행률 조회 쿼리
      */
@@ -38,7 +41,8 @@ public class ProgressWebMapper {
 
     /**
      * Web Request -> Query 변환(강의 진행률 조회 리스트)
-     * @param userId 사용자 ID
+     *
+     * @param userId   사용자 ID
      * @param courseId 강좌 ID
      * @return 수강중인 강좌 내 강의 진행률 조회 쿼리
      */
@@ -48,6 +52,7 @@ public class ProgressWebMapper {
 
     /**
      * Domain -> Response 변환(CourseProgressInfo)
+     *
      * @param courseProgressList 강좌 진행률 리스트
      * @return 강좌 진행률 정보 리스트
      */
@@ -64,6 +69,7 @@ public class ProgressWebMapper {
 
     /**
      * Domain -> Response 변환(LectureProgressInfo)
+     *
      * @param lectureProgresses 강의 진행률 리스트
      * @return 강의 진행률 정보 리스트
      */
@@ -76,4 +82,15 @@ public class ProgressWebMapper {
                         lp.completed()
                 )).toList();
     }
+
+    /**
+     * Web Request -> Command 변환(강좌 진행률 생성)
+     * @param userId 사용자 ID
+     * @param courseId 강좌 ID
+     * @return 강좌 진행률 생성 커맨드
+     */
+    public CreateProgressCommand toCreateCourseProgressCommand(String userId, String courseId) {
+        return new CreateProgressCommand(userId, courseId);
+    }
+
 }
