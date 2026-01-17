@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api-v1/internal/progress")
+@RequestMapping("/internal/api-v1/progress")
 public class ProgressInternalController {
 
     private final GetActiveCourseProgressUseCase getActiveCourseProgressUseCase;
