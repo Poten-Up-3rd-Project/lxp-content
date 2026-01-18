@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 public class DeliveryPolicyResolver {
 
     public DeliveryPolicy resolve(CrudEvent event) {
-        if (event instanceof CourseCreatedEvent) {
-            return DeliveryPolicy.OUTBOX_REQUIRED;
-        }
+//        if (event instanceof CourseCreatedEvent) {
+//            return DeliveryPolicy.OUTBOX_REQUIRED;
+//        }
 
         return DeliveryPolicy.FIRE_AND_FORGET;
     }

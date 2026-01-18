@@ -5,6 +5,7 @@ import com.lxp.common.infrastructure.exception.GlobalExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -86,5 +87,14 @@ public class ContentExceptionHandler extends GlobalExceptionHandler {
 
     private String formatFieldError(FieldError error) {
         return String.format("%s: %s", error.getField(), error.getDefaultMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(org.springframework.security.access.AccessDeniedException e) {
+        log.warn("Access denied: {}", e.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                new ErrorResponse("ACCESS_DENIED", "해당 리소스에 대한 접근 권한이 없습니다", "FORBIDDEN")
+        );
     }
 }
