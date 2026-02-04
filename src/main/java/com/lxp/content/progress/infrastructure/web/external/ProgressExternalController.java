@@ -4,8 +4,13 @@ import com.lxp.common.infrastructure.exception.ApiResponse;
 import com.lxp.content.progress.application.mapper.ProgressWebMapper;
 import com.lxp.content.progress.application.port.in.usecase.UpdateProgressUseCase;
 import com.lxp.content.progress.infrastructure.web.external.dto.UpdateProgressRequest;
+import com.lxp.passport.authorization.annotation.CurrentUserId;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 외부용 강좌 진행률 컨트롤러
@@ -25,24 +30,22 @@ public class ProgressExternalController {
 
     /**
      * 진행률 업데이트
-     * @param userId 사용자 ID
-     * @param courseId 강좌 ID
+     *
+     * @param userId    사용자 ID
+     * @param courseId  강좌 ID
      * @param lectureId 강의 ID
-     * @param request 요청 본문
+     * @param request   요청 본문
      * @return 성공 실패 응답 여부
      */
     @PatchMapping("/{courseId}/{lectureId}")
     public ResponseEntity<ApiResponse<Void>> updateProgress(
-            @RequestHeader("X-Passport") String userId, //TODO 인증 정보에서 사용자 ID 가져오기
-            @PathVariable String courseId,
-            @PathVariable String lectureId,
-            @RequestBody UpdateProgressRequest request
+        @CurrentUserId String userId,
+        @PathVariable String courseId,
+        @PathVariable String lectureId,
+        @RequestBody UpdateProgressRequest request
     ) {
         updateProgressUseCase.execute(progressWebMapper.toCommand(
-                userId,
-                courseId,
-                lectureId,
-                request
+            userId, courseId, lectureId, request
         ));
 
         return ResponseEntity.ok(ApiResponse.success());

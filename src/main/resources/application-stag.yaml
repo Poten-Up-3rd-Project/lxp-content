@@ -27,3 +27,8 @@ services:
 passport:
   key:
     secret-key: ${PASSPORT_SECRET}
+  filter:
+    exclude-paths:
+      - /health
+      - /actuator/**
+      - /internal/api-v1/**

@@ -24,3 +24,8 @@ services:
 passport:
   key:
     secret-key: local-secret-key-for-testing-minimum-32chars
+  filter:
+    exclude-paths:
+      - /health
+      - /actuator/**
+      - /internal/api-v1/**
