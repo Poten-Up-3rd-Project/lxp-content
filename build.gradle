@@ -6,7 +6,7 @@ plugins {
 ext {
     springCloudVersion = "2025.0.1"
     commonLibVersion = "v1.1.0"
-    passportLibVersion = "v1.2.0"
+    passportLibVersion = "v1.2.1"
     awsSdkVersion = "2.25.62"
 }
 
@@ -34,6 +34,8 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+
+    implementation "software.amazon.awssdk:s3:$awsSdkVersion"
 
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
