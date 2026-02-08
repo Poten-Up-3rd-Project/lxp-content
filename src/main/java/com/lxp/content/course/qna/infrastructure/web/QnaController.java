@@ -2,6 +2,7 @@ package com.lxp.content.course.qna.infrastructure.web;
 
 import com.lxp.content.course.qna.application.port.in.CreateQnaUseCase;
 import com.lxp.content.course.qna.application.port.in.GetQnaQuery;
+import com.lxp.passport.authorization.annotation.RequireRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,12 +17,13 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api-v1/")
 public class QnaController {
 
     private final CreateQnaUseCase createQnaUseCase;
     private final GetQnaQuery getQnaQuery;
 
+    @RequireRole(anyOf = {"ROLE_USER", "ROLE_INSTRUCTOR"})
     @PostMapping("/courses/{courseUuid}/sections/{sectionUuid}/lectures/{lectureUuid}/qna")
     @ResponseStatus(HttpStatus.CREATED)
     public CreateResponse create(

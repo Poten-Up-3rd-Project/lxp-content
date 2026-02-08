@@ -6,7 +6,7 @@ plugins {
 ext {
     springCloudVersion = "2025.0.1"
     commonLibVersion = "v1.1.0"
-    passportLibVersion = "v1.2.1"
+    passportLibVersion = "v1.2.2"
     awsSdkVersion = "2.25.62"
 }
 
