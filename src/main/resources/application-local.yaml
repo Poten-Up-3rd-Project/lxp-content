@@ -29,6 +29,8 @@ passport:
       - /health
       - /actuator/**
       - /internal/api-v1/**
+      - /api-v1/lectures/*/qna
+      - /api-v1/qna/**
 
 r2:
   account-id: ${R2_ACCOUNT_ID}
