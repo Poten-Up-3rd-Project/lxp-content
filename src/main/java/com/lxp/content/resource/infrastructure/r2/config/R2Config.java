@@ -1,20 +1,26 @@
 package com.lxp.content.resource.infrastructure.r2.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.URI;
 
 import static java.util.Objects.isNull;
 
 @Configuration
+@ConditionalOnProperty(
+    name = "r2.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 @EnableConfigurationProperties(R2Properties.class)
 public class R2Config {
 

@@ -21,7 +21,7 @@ public class ResourceUploadQueryService implements GenerateUploadUrlUseCase {
     private final StoragePresignPort storagePresignPort;
     private final ResourcePort resourceRepository;
 
-    @Value("${storage.r2.default-ttl-seconds:900}")
+    @Value("${r2.default-ttl-seconds:900}")
     private long defaultTtlSeconds;
 
     @Override

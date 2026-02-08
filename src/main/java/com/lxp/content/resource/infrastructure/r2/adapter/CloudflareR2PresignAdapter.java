@@ -4,6 +4,7 @@ import com.lxp.content.resource.application.port.provided.result.PresignedUrlRes
 import com.lxp.content.resource.application.port.required.StoragePresignPort;
 import com.lxp.content.resource.infrastructure.r2.config.R2Properties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@ConditionalOnProperty(name = "r2.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class CloudflareR2PresignAdapter implements StoragePresignPort {
 

@@ -1,6 +1,7 @@
 package com.lxp.content.resource.integration;
 
 import com.lxp.content.resource.testsupport.DotenvSupport;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -16,19 +17,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Smoke test that PUTs an image to Cloudflare R2 using AWS SDK v2,
  * without Spring/domain/DB. Loads credentials from .env in project root.
  * Required keys:
- *  - R2_ACCOUNT_ID
- *  - R2_ACCESS_KEY_ID
- *  - R2_SECRET_ACCESS_KEY
- *  - R2_BUCKET
+ * - R2_ACCOUNT_ID
+ * - R2_ACCESS_KEY_ID
+ * - R2_SECRET_ACCESS_KEY
+ * - R2_BUCKET
  * Optional:
- *  - R2_ENDPOINT (if omitted, built from R2_ACCOUNT_ID)
+ * - R2_ENDPOINT (if omitted, built from R2_ACCOUNT_ID)
  */
+@Disabled
 class R2ImageSmokeIT {
 
     @Test

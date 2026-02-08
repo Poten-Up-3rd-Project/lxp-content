@@ -8,9 +8,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Minimal .env loader for tests only (no external dependency). */
+/**
+ * Minimal .env loader for tests only (no external dependency).
+ */
 public final class DotenvSupport {
-    private DotenvSupport() {}
+    private DotenvSupport() {
+    }
 
     public static Map<String, String> loadFromProjectRoot() {
         File f = new File(System.getProperty("user.dir"), ".env");
@@ -31,7 +34,8 @@ public final class DotenvSupport {
                 }
                 m.put(k, v);
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
         return m;
     }
 }
