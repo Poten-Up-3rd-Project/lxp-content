@@ -6,7 +6,6 @@ import com.lxp.content.progress.application.port.in.usecase.UpdateProgressUseCas
 import com.lxp.content.progress.infrastructure.web.external.dto.UpdateProgressRequest;
 import com.lxp.passport.authorization.annotation.CurrentUserId;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
