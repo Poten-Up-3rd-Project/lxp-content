@@ -34,14 +34,18 @@ public class CourseReadModelUpdateHandler implements ReadModelUpdater<CrudEvent>
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
-    @TransactionalEventListener
+    @TransactionalEventListener(classes = { CourseCreatedEvent.class })
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void update(CrudEvent event) {
-        switch (event.getCrudType()) {
-            case CREATED -> onCreate((CourseCreatedEvent) event);
-//            case UPDATED -> onUpdate((CourseUpdatedEvent) event);
-//            case DELETED -> onDelete((CourseDeletedEvent) event);
+        // Guard against non-course events (e.g., QnaCreatedEvent)
+        if (!(event instanceof CourseCreatedEvent c)) {
+            return;
+        }
+        switch (c.getCrudType()) {
+            case CREATED -> onCreate(c);
+//            case UPDATED -> onUpdate((CourseUpdatedEvent) c);
+//            case DELETED -> onDelete((CourseDeletedEvent) c);
         }
     }
 
