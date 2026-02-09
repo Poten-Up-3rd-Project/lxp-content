@@ -2,6 +2,8 @@ package com.lxp.content.course.qna.infrastructure.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lxp.content.course.qna.application.port.in.AddQnaAnswerUseCase;
+import com.lxp.content.course.qna.application.port.in.CreateQnaUseCase;
+import com.lxp.content.course.qna.application.port.in.GetQnaQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -10,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -27,6 +30,12 @@ class QnaControllerCallbackTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @MockitoBean
+    private CreateQnaUseCase createQnaUseCase;
+
+    @MockitoBean
+    GetQnaQuery getQnaQuery;
 
     @Autowired
     AddQnaAnswerUseCase addQnaAnswerUseCase;
