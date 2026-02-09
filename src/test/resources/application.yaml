@@ -16,3 +16,6 @@ passport:
 services:
   user:
     url: http://lxp-user:8080
+
+r2:
+  enabled: false

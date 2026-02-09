@@ -24,3 +24,17 @@ services:
 passport:
   key:
     secret-key: local-secret-key-for-testing-minimum-32chars
+  filter:
+    exclude-paths:
+      - /health
+      - /actuator/**
+      - /internal/api-v1/**
+
+r2:
+  account-id: ${R2_ACCOUNT_ID}
+  access-key-id: ${R2_ACCESS_KEY_ID}
+  secret-access-key: ${R2_SECRET_ACCESS_KEY}
+  bucket: ${R2_BUCKET}
+  endpoint: ${R2_ENDPOINT}
+  region: ${R2_REGION}
+  default-ttl-seconds: ${R2_DEFAULT_TTL_SECONDS}

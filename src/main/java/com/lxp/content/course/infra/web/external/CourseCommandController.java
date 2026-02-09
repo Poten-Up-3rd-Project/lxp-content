@@ -6,12 +6,14 @@ import com.lxp.content.course.application.port.provider.view.CourseDetailView;
 import com.lxp.content.course.infra.web.external.dto.request.create.CourseCreateRequest;
 import com.lxp.content.course.infra.web.external.dto.response.CourseDetailResponse;
 import com.lxp.content.course.infra.web.external.mapper.CourseWebMapper;
+import com.lxp.passport.authorization.annotation.CurrentUserId;
+import com.lxp.passport.authorization.annotation.RequireRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api-v1/courses")
@@ -22,11 +24,11 @@ public class CourseCommandController {
 
     // TODO : 인증 적용 후 userId 주입
 
-    @PreAuthorize("hasRole('INSTRUCTOR')")
+    @RequireRole("ROLE_INSTRUCTOR")
     @PostMapping
-    public ResponseEntity<CourseDetailResponse> create(@AuthenticationPrincipal String userId,
+    public ResponseEntity<CourseDetailResponse> create(@CurrentUserId String userId,
                                                        @RequestBody CourseCreateRequest request) {
-        CourseCreateCommand command = mapper.toCreateCommand(userId,request);
+        CourseCreateCommand command = mapper.toCreateCommand(userId, request);
         CourseDetailView view = createUseCase.execute(command);
         return ResponseEntity.ok(mapper.toDetailResponse(view));
     }
