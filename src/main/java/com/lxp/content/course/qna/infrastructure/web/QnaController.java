@@ -3,6 +3,7 @@ package com.lxp.content.course.qna.infrastructure.web;
 import com.lxp.content.course.qna.application.port.in.AddQnaAnswerUseCase;
 import com.lxp.content.course.qna.application.port.in.CreateQnaUseCase;
 import com.lxp.content.course.qna.application.port.in.GetQnaQuery;
+import com.lxp.content.course.qna.application.port.in.GetQnaAnswersQuery;
 import com.lxp.content.course.qna.infrastructure.web.dto.request.AddAnswerRequest;
 import com.lxp.content.course.qna.infrastructure.web.dto.request.QnaCreateRequest;
 import com.lxp.content.course.qna.infrastructure.web.dto.response.AddAnswerResponse;
@@ -29,6 +30,7 @@ public class QnaController {
     private final CreateQnaUseCase createQnaUseCase;
     private final GetQnaQuery getQnaQuery;
     private final AddQnaAnswerUseCase addQnaAnswerUseCase;
+    private final GetQnaAnswersQuery getQnaAnswersQuery;
 
     @RequireRole(anyOf = {"ROLE_USER", "ROLE_INSTRUCTOR"})
     @PostMapping("/courses/{courseUuid}/sections/{sectionUuid}/lectures/{lectureUuid}/qna")
@@ -67,6 +69,14 @@ public class QnaController {
         @RequestBody AddAnswerRequest body,
         @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
     ) {
+        // Diagnostics: incoming answer length
+        org.slf4j.LoggerFactory.getLogger(QnaController.class).info(
+            "qna.answer.incoming qnaId={}, eventId={}, len={}",
+            qnaId,
+            idempotencyKey != null ? idempotencyKey : body.eventId(),
+            body.answerText() != null ? body.answerText().length() : 0
+        );
+
         var cmd = new com.lxp.content.course.qna.application.port.in.AddQnaAnswerUseCase.Command(
             qnaId,
             body.answerText(),
@@ -77,5 +87,10 @@ public class QnaController {
         );
         var res = addQnaAnswerUseCase.handle(cmd);
         return new AddAnswerResponse(res.id());
+    }
+
+    @GetMapping("/qna/{qnaId}/answers")
+    public java.util.List<GetQnaAnswersQuery.AnswerView> listAnswers(@PathVariable String qnaId) {
+        return getQnaAnswersQuery.byQnaId(qnaId);
     }
 }

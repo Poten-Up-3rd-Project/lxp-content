@@ -7,9 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.TestConstructor;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnableJpaRepositories(basePackageClasses = QnaAnswerJpaRepository.class)
 @EntityScan(basePackageClasses = QnaAnswerJpaEntity.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class QnaAnswerJpaRepositoryTest {
 
     private final QnaAnswerJpaRepository repository;

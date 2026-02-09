@@ -23,7 +23,7 @@ public class QnaAnswerJpaEntity extends BaseJpaEntity {
     @Column(nullable = false)
     private String qnaBusinessId; // Qna.id (UUID)
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String answerText;
 
     @Column(nullable = false)
