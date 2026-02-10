@@ -17,15 +17,24 @@ public class RabbitMQProducer implements EventProducer {
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final String EXCHANGE = "course.exchange";
+    private static final String COURSE_EXCHANGE = "course.exchange";
+    private static final String CONTENT_EXCHANGE = "content.events";
 
+    private String resolveExchange(IntegrationEvent event) {
+        String type = event.getEventType();
+        if (type != null && type.startsWith("qna.")) {
+            return CONTENT_EXCHANGE;
+        }
+        return COURSE_EXCHANGE;
+    }
 
     @Override
     public void send(IntegrationEvent event) {
         try {
             String routingKey = event.getEventType();
             String json = toJson(event);
-            rabbitTemplate.convertAndSend(EXCHANGE, routingKey, json);
+            String exchange = resolveExchange(event);
+            rabbitTemplate.convertAndSend(exchange, routingKey, json);
         } catch (EventSerializationException e) {
             throw e;
         } catch (Exception e) {
