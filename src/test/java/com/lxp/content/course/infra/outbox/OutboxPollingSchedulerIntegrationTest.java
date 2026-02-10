@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.lxp.common.infrastructure.persistence.OutboxEvent;
+import com.lxp.common.infrastructure.persistence.OutboxOptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +45,6 @@ class OutboxPollingSchedulerIntegrationTest {
         registry.add("spring.rabbitmq.password", rabbitMQ::getAdminPassword);
     }
 
-
     @Autowired
     private CourseOutboxRepository outboxRepository;
 
@@ -59,6 +60,16 @@ class OutboxPollingSchedulerIntegrationTest {
     private static final String EXCHANGE = "course.exchange";
     private static final String QUEUE = "course.created.queue";
     private static final String ROUTING_KEY = "course.created";
+
+    private static final OutboxOptions DEFAULT_OPTIONS = new OutboxOptions(
+            50,
+            null,
+            null,
+            3,
+            Duration.ofSeconds(5),
+            true,
+            false
+    );
 
     @BeforeEach
     void setUp() {
@@ -134,8 +145,8 @@ class OutboxPollingSchedulerIntegrationTest {
     }
 
     @Test
-    @DisplayName("발행 실패 시 FAILED 상태가 되고 retryCount가 증가한다")
-    void pollAndPublish_marksFailedOnError() {
+    @DisplayName("발행 실패 시 재시도를 위해 PENDING 상태를 유지하고 retryCount가 증가한다")
+    void pollAndPublish_staysPendingOnFailureWithRetries() {
         // given - 잘못된 payload
         OutboxEvent invalidOutbox = createInvalidOutboxEvent("course-invalid");
         outboxRepository.saveAndFlush(invalidOutbox);
@@ -143,18 +154,41 @@ class OutboxPollingSchedulerIntegrationTest {
         // when
         scheduler.pollAndPublish();
 
-        // then
+        // then - maxRetries=3이므로 첫 실패 후 PENDING 유지 (백오프 재시도 대기)
         OutboxEvent failed = outboxRepository.findByEventId(invalidOutbox.getEventId()).orElseThrow();
-        assertThat(failed.getStatus()).isEqualTo(OutboxEvent.OutboxStatus.FAILED);
         assertThat(failed.getRetryCount()).isEqualTo(1);
         assertThat(failed.getLastError()).isNotNull();
+        assertThat(failed.getStatus()).isEqualTo(OutboxEvent.OutboxStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("maxRetries 소진 시 FAILED 상태로 변경된다")
+    void pollAndPublish_marksAsFailedWhenRetriesExhausted() {
+        // given - maxRetries=1로 설정하여 첫 실패 시 바로 FAILED
+        OutboxOptions lowRetryOptions = new OutboxOptions(
+                50, null, null, 1, Duration.ofSeconds(5), true, false
+        );
+        OutboxEvent invalidOutbox = createInvalidOutboxEvent("course-exhausted", lowRetryOptions);
+        outboxRepository.saveAndFlush(invalidOutbox);
+
+        // when
+        scheduler.pollAndPublish();
+
+        // then
+        OutboxEvent failed = outboxRepository.findByEventId(invalidOutbox.getEventId()).orElseThrow();
+        assertThat(failed.getRetryCount()).isEqualTo(1);
+        assertThat(failed.getLastError()).isNotNull();
+        assertThat(failed.getStatus()).isEqualTo(OutboxEvent.OutboxStatus.FAILED);
     }
 
     @Test
     @DisplayName("재시도 스케줄러가 FAILED 이벤트를 다시 시도한다")
     void retryFailedEvents_retriesFailedEvents() {
-        // given - FAILED 상태의 유효한 이벤트
-        OutboxEvent failedOutbox = createOutboxEvent("course-retry");
+        // given - maxRetries=1로 설정하여 한 번 실패 시 FAILED 상태
+        OutboxOptions lowRetryOptions = new OutboxOptions(
+                50, null, null, 1, Duration.ofSeconds(5), true, false
+        );
+        OutboxEvent failedOutbox = createOutboxEvent("course-retry", lowRetryOptions);
         failedOutbox.markAsFailed("Previous error");
         outboxRepository.saveAndFlush(failedOutbox);
 
@@ -189,6 +223,10 @@ class OutboxPollingSchedulerIntegrationTest {
     // ===== Helper Methods =====
 
     private OutboxEvent createOutboxEvent(String courseUuid) {
+        return createOutboxEvent(courseUuid, DEFAULT_OPTIONS);
+    }
+
+    private OutboxEvent createOutboxEvent(String courseUuid, OutboxOptions options) {
         String eventId = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
 
@@ -218,11 +256,16 @@ class OutboxPollingSchedulerIntegrationTest {
                 "CourseCreatedEvent",
                 courseUuid,
                 payload,
-                now
+                now,
+                options
         );
     }
 
     private OutboxEvent createInvalidOutboxEvent(String courseUuid) {
+        return createInvalidOutboxEvent(courseUuid, DEFAULT_OPTIONS);
+    }
+
+    private OutboxEvent createInvalidOutboxEvent(String courseUuid, OutboxOptions options) {
         String eventId = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
 
@@ -232,11 +275,17 @@ class OutboxPollingSchedulerIntegrationTest {
                 "CourseCreatedEvent",
                 courseUuid,
                 "{ invalid json }",
-                now
+                now,
+                options
         );
     }
 
     private OutboxEvent createExhaustedOutboxEvent(String courseUuid) {
+        // maxRetries=1로 설정하여 빠르게 FAILED 상태 도달
+        OutboxOptions lowRetryOptions = new OutboxOptions(
+                50, null, null, 1, Duration.ofSeconds(5), true, false
+        );
+
         String eventId = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
 
@@ -246,10 +295,11 @@ class OutboxPollingSchedulerIntegrationTest {
                 "CourseCreatedEvent",
                 courseUuid,
                 "{ invalid }",
-                now
+                now,
+                lowRetryOptions
         );
 
-        // 3번 실패 처리
+        // 3번 실패 처리 → retryCount=3, FAILED (scheduler MAX_RETRY_COUNT=3 이상)
         outbox.markAsFailed("Error 1");
         outbox.markAsFailed("Error 2");
         outbox.markAsFailed("Error 3");
