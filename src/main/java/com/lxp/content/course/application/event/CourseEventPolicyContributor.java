@@ -8,6 +8,7 @@ import com.lxp.common.application.event.policy.failure.RetryThenDlq;
 import com.lxp.common.application.event.policy.ordering.Parallel;
 import com.lxp.common.application.event.policy.priority.NormalPriority;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
+import com.lxp.content.course.domain.event.CourseDeletedEvent;
 import com.lxp.content.course.qna.domain.event.QnaCreatedEvent;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +32,13 @@ public class CourseEventPolicyContributor implements EventPolicyContributor {
                         new Parallel(),
                         new RetryThenDlq(3, Duration.ofSeconds(5))
                 ))
+                .register(CourseDeletedEvent.class, new EventPublishPolicy(
+                        new AtLeastOnce(),
+                        new NormalPriority(),
+                        new Parallel(),
+                        new RetryThenDlq(3, Duration.ofSeconds(5))
+                        )
+                )
         ;
     }
 }
