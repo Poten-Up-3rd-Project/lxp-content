@@ -36,6 +36,8 @@ outbox:
     interval: 5000
   retry:
     interval: 60000
+  dlq:
+    interval: 100000
 
 resilience4j:
   circuitbreaker:

@@ -22,7 +22,7 @@ public class QnaIntegrationEventMapper {
         throw new IllegalArgumentException("Unknown event: " + event.getClass());
     }
 
-    private QnaCreatedIntegrationEvent toCreated(QnaCreatedEvent e) {
+    public QnaCreatedIntegrationEvent toCreated(QnaCreatedEvent e) {
         ReadCourseStructurePort.Titles titles = readCourseStructurePort.titlesOf(e.getCourseUuid(), e.getSectionUuid(), e.getLectureUuid());
         QnaCreatedPayload payload = new QnaCreatedPayload(
             new QnaCreatedPayload.Course(e.getCourseUuid(), titles.courseTitle()),

@@ -2,6 +2,7 @@ package com.lxp.content.course.infra.outbox;
 
 import com.lxp.common.application.event.IntegrationEvent;
 import com.lxp.common.infrastructure.persistence.OutboxEvent;
+import com.lxp.common.infrastructure.persistence.OutboxOptions;
 import com.lxp.content.course.application.event.integration.EventMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,10 +36,20 @@ class OutboxEventStoreAdapterTest {
     private IntegrationEvent integrationEvent;
 
     private EventMetadata metadata;
+    private OutboxOptions options;
 
     @BeforeEach
     void setUp() {
         metadata = new EventMetadata("course-123", "CourseCreatedEvent");
+        options = new OutboxOptions(
+                50,
+                null,
+                null,
+                3,
+                Duration.ofSeconds(5),
+                true,
+                false
+        );
     }
 
     @Test
@@ -50,7 +62,7 @@ class OutboxEventStoreAdapterTest {
         given(serializer.serialize(integrationEvent)).willReturn("{\"payload\":\"test\"}");
 
         // when
-        adapter.save(integrationEvent, metadata);
+        adapter.save(integrationEvent, metadata, options);
 
         // then
         ArgumentCaptor<OutboxEvent> captor = ArgumentCaptor.forClass(OutboxEvent.class);

@@ -1,12 +1,12 @@
 package com.lxp.content.course.application.event.integration;
 
-import com.lxp.content.course.domain.event.CrudEvent;
+import com.lxp.common.domain.event.DomainEvent;
 
 public record EventMetadata(
         String aggregateId,
         String aggregateEventType
 ) {
-    public static EventMetadata from(CrudEvent event) {
+    public static EventMetadata from(DomainEvent event) {
         return new EventMetadata(
                 event.getAggregateId(),
                 event.getClass().getSimpleName()

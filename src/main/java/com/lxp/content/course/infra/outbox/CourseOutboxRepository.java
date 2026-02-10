@@ -34,4 +34,25 @@ public interface CourseOutboxRepository extends OutboxEventRepository {
         AND o.publishedAt < :before
         """)
     int deletePublishedEventsBefore(@Param("before") LocalDateTime before);
+
+    @Query("""
+        SELECT o FROM OutboxEvent o
+        WHERE o.status = 'FAILED'
+        AND o.useDlq = true
+        AND o.retryCount >= :maxRetry
+        ORDER BY o.createdAt ASC
+        LIMIT :limit
+        """)
+    List<OutboxEvent> findDlqCandidates(
+            @Param("maxRetry") int maxRetry,
+            @Param("limit") int limit
+    );
+
+    @Modifying
+    @Query("""
+        UPDATE OutboxEvent o
+        SET o.status = 'DLQ', o.publishedAt = :publishedAt
+        WHERE o.id = :id
+        """)
+    void markAsDlq(@Param("id") Long id, @Param("publishedAt") LocalDateTime publishedAt);
 }

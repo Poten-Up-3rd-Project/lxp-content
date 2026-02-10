@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -65,6 +66,23 @@ public class OutboxPollingScheduler {
         }
     }
 
+    @Scheduled(fixedDelayString = "${outbox.dlq.interval:30000}")
+    @Transactional
+    public void processDlqEvents() {
+        List<OutboxEvent> dlqCandidates = outboxRepository
+                .findDlqCandidates(MAX_RETRY_COUNT, BATCH_SIZE);
+
+        if (dlqCandidates.isEmpty()) {
+            return;
+        }
+
+        log.info("Processing {} DLQ candidate events", dlqCandidates.size());
+
+        for (OutboxEvent outbox : dlqCandidates) {
+            sendToDlq(outbox);
+        }
+    }
+
     private void publishEvent(OutboxEvent outbox) {
         try {
             IntegrationEvent event = serializer.deserialize(outbox);
@@ -77,5 +95,17 @@ public class OutboxPollingScheduler {
                     outbox.getEventId(), outbox.getRetryCount(), e.getMessage());
         }
         outboxRepository.save(outbox);
+    }
+
+    private void sendToDlq(OutboxEvent outbox) {
+        try {
+            eventProducer.sendToDlq(outbox.getPayload(), outbox.getEventType());
+            outboxRepository.markAsDlq(outbox.getId(), LocalDateTime.now());
+            log.info("Sent outbox event to DLQ: eventId={}, eventType={}",
+                    outbox.getEventId(), outbox.getEventType());
+        } catch (Exception e) {
+            log.error("Failed to send outbox event to DLQ: eventId={}, error={}",
+                    outbox.getEventId(), e.getMessage());
+        }
     }
 }
