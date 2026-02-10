@@ -61,6 +61,10 @@ class OutboxPollingSchedulerIntegrationTest {
     private static final String QUEUE = "course.created.queue";
     private static final String ROUTING_KEY = "course.created";
 
+    private static final String DLQ_EXCHANGE = "content.dlq.exchange";
+    private static final String DLQ_QUEUE = "content.dlq.queue";
+    private static final String DLQ_ROUTING_KEY = "course.#";
+
     private static final OutboxOptions DEFAULT_OPTIONS = new OutboxOptions(
             50,
             null,
@@ -82,6 +86,15 @@ class OutboxPollingSchedulerIntegrationTest {
                         .with(ROUTING_KEY)
         );
         rabbitAdmin.purgeQueue(QUEUE);
+
+        rabbitAdmin.declareExchange(new TopicExchange(DLQ_EXCHANGE));
+        rabbitAdmin.declareQueue(new Queue(DLQ_QUEUE, true));
+        rabbitAdmin.declareBinding(
+                BindingBuilder.bind(new Queue(DLQ_QUEUE))
+                        .to(new TopicExchange(DLQ_EXCHANGE))
+                        .with(DLQ_ROUTING_KEY)
+        );
+        rabbitAdmin.purgeQueue(DLQ_QUEUE);
 
         outboxRepository.deleteAll();
 
@@ -220,6 +233,53 @@ class OutboxPollingSchedulerIntegrationTest {
         assertThat(unchanged.getStatus()).isEqualTo(OutboxEvent.OutboxStatus.FAILED);
     }
 
+    @Test
+    @DisplayName("maxRetries 소진 + useDlq=true 이벤트를 DLQ exchange로 발행하고 상태를 DLQ로 변경한다")
+    void processDlqEvents_sendsToDeadLetterQueue() {
+        // given - useDlq=true, retryCount >= MAX_RETRY_COUNT(3)인 FAILED 이벤트
+        OutboxEvent exhaustedOutbox = createExhaustedOutboxEvent("course-dlq");
+        outboxRepository.saveAndFlush(exhaustedOutbox);
+
+        // when
+        scheduler.processDlqEvents();
+
+        // then - DLQ 큐에 메시지 도착 확인
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
+            Message message = rabbitTemplate.receive(DLQ_QUEUE, 1000);
+            assertThat(message).isNotNull();
+
+            String body = new String(message.getBody());
+            assertThat(body).contains("course-dlq");
+        });
+
+        // then - Outbox 상태가 DLQ로 변경
+        OutboxEvent dlqEvent = outboxRepository.findByEventId(exhaustedOutbox.getEventId()).orElseThrow();
+        assertThat(dlqEvent.getStatus()).isEqualTo(OutboxEvent.OutboxStatus.DLQ);
+        assertThat(dlqEvent.getPublishedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("useDlq=false인 FAILED 이벤트는 DLQ로 발행하지 않는다")
+    void processDlqEvents_ignoresEventsWithoutDlqFlag() {
+        // given - useDlq=false인 FAILED 이벤트
+        OutboxOptions noDlqOptions = new OutboxOptions(
+                50, null, null, 1, Duration.ofSeconds(5), false, false
+        );
+        OutboxEvent exhaustedOutbox = createExhaustedOutboxEvent("course-no-dlq", noDlqOptions);
+        outboxRepository.saveAndFlush(exhaustedOutbox);
+
+        // when
+        scheduler.processDlqEvents();
+
+        // then - DLQ 큐에 메시지 없음
+        Message message = rabbitTemplate.receive(DLQ_QUEUE, 1000);
+        assertThat(message).isNull();
+
+        // then - 상태 변화 없음
+        OutboxEvent unchanged = outboxRepository.findByEventId(exhaustedOutbox.getEventId()).orElseThrow();
+        assertThat(unchanged.getStatus()).isEqualTo(OutboxEvent.OutboxStatus.FAILED);
+    }
+
     // ===== Helper Methods =====
 
     private OutboxEvent createOutboxEvent(String courseUuid) {
@@ -281,22 +341,45 @@ class OutboxPollingSchedulerIntegrationTest {
     }
 
     private OutboxEvent createExhaustedOutboxEvent(String courseUuid) {
-        // maxRetries=1로 설정하여 빠르게 FAILED 상태 도달
-        OutboxOptions lowRetryOptions = new OutboxOptions(
+        OutboxOptions dlqOptions = new OutboxOptions(
                 50, null, null, 1, Duration.ofSeconds(5), true, false
         );
+        return createExhaustedOutboxEvent(courseUuid, dlqOptions);
+    }
 
+    private OutboxEvent createExhaustedOutboxEvent(String courseUuid, OutboxOptions options) {
         String eventId = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
+
+        // DLQ 테스트용으로 유효한 payload 사용
+        String payload = String.format("""
+            {
+                "eventId": "%s",
+                "eventType": "course.created",
+                "occurredAt": "%s",
+                "source": "lxp.course.service",
+                "correlationId": "%s",
+                "causationId": null,
+                "payload": {
+                    "courseUuid": "%s",
+                    "instructorUuid": "instructor-456",
+                    "title": "Java 기초",
+                    "description": "자바 기초 강의입니다",
+                    "thumbnailUrl": "thumbnail.png",
+                    "difficulty": "JUNIOR",
+                    "tagIds": [1, 2]
+                }
+            }
+            """, eventId, now, eventId, courseUuid);
 
         OutboxEvent outbox = new OutboxEvent(
                 eventId,
                 "course.created",
                 "CourseCreatedEvent",
                 courseUuid,
-                "{ invalid }",
+                payload,
                 now,
-                lowRetryOptions
+                options
         );
 
         // 3번 실패 처리 → retryCount=3, FAILED (scheduler MAX_RETRY_COUNT=3 이상)

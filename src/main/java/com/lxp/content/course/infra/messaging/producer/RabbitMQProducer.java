@@ -16,6 +16,7 @@ public class RabbitMQProducer implements EventProducer {
 
     private static final String COURSE_EXCHANGE = "course.exchange";
     private static final String CONTENT_EXCHANGE = "content.events";
+    private static final String DLQ_EXCHANGE = "dlq.exchange";
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
@@ -30,6 +31,7 @@ public class RabbitMQProducer implements EventProducer {
 
         throw new IllegalArgumentException("Unknown event type: " + eventType);
     }
+
     @Override
     public void send(IntegrationEvent event) {
         String json = serialize(event);
@@ -39,6 +41,15 @@ public class RabbitMQProducer implements EventProducer {
             rabbitTemplate.convertAndSend(exchange, event.getEventType(), json);
         } catch (Exception e) {
             throw new EventPublishException("Failed to send event: " + event.getEventId(), e);
+        }
+    }
+
+    @Override
+    public void sendToDlq(String payload, String eventType) {
+        try {
+            rabbitTemplate.convertAndSend(DLQ_EXCHANGE, eventType, payload);
+        } catch (Exception e) {
+            throw new EventPublishException("Failed to send event to DLQ: " + eventType, e);
         }
     }
 
