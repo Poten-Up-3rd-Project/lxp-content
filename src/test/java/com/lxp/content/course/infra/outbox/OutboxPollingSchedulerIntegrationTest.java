@@ -61,8 +61,8 @@ class OutboxPollingSchedulerIntegrationTest {
     private static final String QUEUE = "course.created.queue";
     private static final String ROUTING_KEY = "course.created";
 
-    private static final String DLQ_EXCHANGE = "content.dlq.exchange";
-    private static final String DLQ_QUEUE = "content.dlq.queue";
+    private static final String DLQ_EXCHANGE = "dlq.exchange";
+    private static final String DLQ_QUEUE = "dlq.queue";
     private static final String DLQ_ROUTING_KEY = "course.#";
 
     private static final OutboxOptions DEFAULT_OPTIONS = new OutboxOptions(
