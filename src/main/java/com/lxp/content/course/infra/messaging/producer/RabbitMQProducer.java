@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RabbitMQProducer implements EventProducer {
 
-    private static final String COURSE_EXCHANGE = "course.exchange";
+    private static final String COURSE_EXCHANGE = "course.events";
     private static final String CONTENT_EXCHANGE = "content.events";
-    private static final String DLQ_EXCHANGE = "dlq.exchange";
+    private static final String DLQ_EXCHANGE = "dlq.events";
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;

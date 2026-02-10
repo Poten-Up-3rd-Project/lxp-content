@@ -57,11 +57,11 @@ class OutboxPollingSchedulerIntegrationTest {
     private RabbitAdmin rabbitAdmin;
     private ObjectMapper objectMapper;
 
-    private static final String EXCHANGE = "course.exchange";
+    private static final String EXCHANGE = "course.events";
     private static final String QUEUE = "course.created.queue";
     private static final String ROUTING_KEY = "course.created";
 
-    private static final String DLQ_EXCHANGE = "dlq.exchange";
+    private static final String DLQ_EXCHANGE = "dlq.events";
     private static final String DLQ_QUEUE = "dlq.queue";
     private static final String DLQ_ROUTING_KEY = "course.#";
 
