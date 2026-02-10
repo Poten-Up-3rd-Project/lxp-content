@@ -7,6 +7,7 @@ import com.lxp.content.course.domain.event.CourseCreatedEvent;
 import com.lxp.content.course.domain.event.CrudEvent;
 import com.lxp.content.course.qna.application.event.integration.QnaCreatedIntegrationEvent;
 import com.lxp.content.course.qna.application.event.integration.payload.QnaCreatedPayload;
+import com.lxp.content.course.qna.application.event.mapper.QnaIntegrationEventMapper;
 import com.lxp.content.course.qna.application.port.out.ReadCourseStructurePort;
 import com.lxp.content.course.qna.domain.event.QnaCreatedEvent;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +17,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CourseIntegrationEventMapper {
 
-    private final ReadCourseStructurePort readCourseStructurePort;
+    private final QnaIntegrationEventMapper qnaIntegrationEventMapper;
 
     public IntegrationEvent toIntegrationEvent(CrudEvent event) {
         if (event instanceof CourseCreatedEvent e) {
             return toCreatedEvent(e);
         }
         if (event instanceof QnaCreatedEvent e) {
-            return toCreated(e);
+            return qnaIntegrationEventMapper.toCreated(e);
         }
 //        else if (event instanceof CourseUpdatedEvent e) {
 //            return toUpdatedEvent(e);
@@ -56,20 +57,5 @@ public class CourseIntegrationEventMapper {
     }
 
 
-    private QnaCreatedIntegrationEvent toCreated(QnaCreatedEvent e) {
-        ReadCourseStructurePort.Titles titles = readCourseStructurePort.titlesOf(e.getCourseUuid(), e.getSectionUuid(), e.getLectureUuid());
-        QnaCreatedPayload payload = new QnaCreatedPayload(
-            new QnaCreatedPayload.Course(e.getCourseUuid(), titles.courseTitle()),
-            new QnaCreatedPayload.Section(e.getSectionUuid(), titles.sectionTitle()),
-            new QnaCreatedPayload.Lecture(e.getLectureUuid(), titles.lectureTitle()),
-            new QnaCreatedPayload.Qna(e.getAggregateId(), e.getAuthorId(), e.getTitle(), e.getContent(), e.getOccurredAt())
-        );
-        return new QnaCreatedIntegrationEvent(
-            e.getEventId(),
-            e.getOccurredAt(),
-            e.getEventId(), // correlationId
-            null, // causationId
-            payload
-        );
-    }
+
 }

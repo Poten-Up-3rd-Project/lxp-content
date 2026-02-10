@@ -61,7 +61,7 @@ class CourseEventPublishingHandlerTest {
             new RetryThenDlq(3, Duration.ofSeconds(5))
     );
 
-    private static final EventPublishPolicy FIRE_AND_FORGET_POLICY = new EventPublishPolicy(
+    static final EventPublishPolicy FIRE_AND_FORGET_POLICY = new EventPublishPolicy(
             new AtMostOnce(),
             new LowPriority(),
             new Parallel(),
