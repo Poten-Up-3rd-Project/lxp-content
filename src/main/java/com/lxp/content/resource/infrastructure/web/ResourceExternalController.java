@@ -48,7 +48,7 @@ public class ResourceExternalController {
         @RequestBody UploadUrlRequest req
     ) {
         PresignedUrlResult result = generateUploadUrlUseCase.execute(
-            new GenerateUploadUrlQuery(userId, UploadType.valueOf(req.contentType()))
+            new GenerateUploadUrlQuery(userId, UploadType.valueOf(req.uploadType()), req.contentType())
         );
         return ResponseEntity.ok(
             new UploadUrlResponse(result.key(), result.url(), result.method(), result.headers())

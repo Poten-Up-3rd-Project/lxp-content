@@ -10,14 +10,17 @@ import java.util.Set;
 public enum UploadType {
 
     IMAGE(
-        Set.of("image/png", "image/jpeg", "image/webp")
+        Set.of("image/png", "image/jpeg", "image/webp", "image/jpg")
     ) {
         @Override
         public long maxSize() {
             return 5 * MB;
         }
+
         @Override
-        public String keyPrefix() { return "images"; }
+        public String keyPrefix() {
+            return "images";
+        }
     },
 
     VIDEO(
@@ -25,10 +28,13 @@ public enum UploadType {
     ) {
         @Override
         public long maxSize() {
-            return 500 * MB;
+            return 200 * MB;
         }
+
         @Override
-        public String keyPrefix() { return "videos"; }
+        public String keyPrefix() {
+            return "videos";
+        }
     };
 
     private static final long MB = 1024L * 1024L;
@@ -44,8 +50,9 @@ public enum UploadType {
 
     protected abstract long maxSize();
 
-    // default fallback prefix
-    public String keyPrefix() { return "resources"; }
+    public String keyPrefix() {
+        return "resources";
+    }
 
     public void validateSize(long size) {
         if (size > this.maxSize()) {
@@ -53,8 +60,12 @@ public enum UploadType {
         }
     }
 
-    public String defaultContentType() {
-        return allowedContentTypes.iterator().next();
+    public void isNotSupportedThenThrow(String contentType) {
+        if (!supports(contentType)) {
+            throw new UnsupportedContentTypeException(
+                String.format("%s does not support %s", this, contentType)
+            );
+        }
     }
 
     public boolean supports(String contentType) {

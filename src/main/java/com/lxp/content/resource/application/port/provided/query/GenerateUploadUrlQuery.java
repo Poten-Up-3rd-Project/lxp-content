@@ -4,6 +4,7 @@ import com.lxp.content.resource.domain.model.vo.UploadType;
 
 public record GenerateUploadUrlQuery(
     String userId,
-    UploadType contentType
+    UploadType uploadType,
+    String contentType
 ) {
 }
