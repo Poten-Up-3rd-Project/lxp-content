@@ -26,8 +26,7 @@ public class QnaPersistenceAdapter implements SaveQnaPort, LoadQnaPort {
             qna.getLectureUuid(),
             qna.getAuthorId(),
             qna.getTitle(),
-            qna.getContent(),
-            qna.getCreatedAt()
+            qna.getContent()
         );
         repository.save(entity);
         return qna; // entity -> domain is 1:1 for now

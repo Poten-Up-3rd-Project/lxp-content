@@ -3,11 +3,13 @@ package com.lxp.content.course.qna.infrastructure.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lxp.content.course.qna.application.port.in.AddQnaAnswerUseCase;
 import com.lxp.content.course.qna.application.port.in.CreateQnaUseCase;
+import com.lxp.content.course.qna.application.port.in.GetQnaAnswersQuery;
 import com.lxp.content.course.qna.application.port.in.GetQnaQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = QnaController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class QnaControllerCallbackTest {
 
     @Autowired
@@ -33,6 +36,9 @@ class QnaControllerCallbackTest {
 
     @MockitoBean
     private CreateQnaUseCase createQnaUseCase;
+
+    @MockitoBean
+    private GetQnaAnswersQuery getQnaAnswersQuery;
 
     @MockitoBean
     GetQnaQuery getQnaQuery;

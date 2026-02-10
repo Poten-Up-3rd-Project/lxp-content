@@ -1,5 +1,6 @@
 package com.lxp.content.course.qna.infrastructure.persistence;
 
+import com.lxp.content.course.infra.persistence.mysql.write.entity.LectureJpaEntity;
 import com.lxp.content.course.qna.infrastructure.persistence.entity.QnaAnswerJpaEntity;
 import com.lxp.content.course.qna.infrastructure.persistence.repository.QnaAnswerJpaRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @EnableJpaRepositories(basePackageClasses = QnaAnswerJpaRepository.class)
-@EntityScan(basePackageClasses = QnaAnswerJpaEntity.class)
+@EntityScan(basePackageClasses = {QnaAnswerJpaEntity.class, LectureJpaEntity.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class QnaAnswerJpaRepositoryTest {

@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -37,10 +38,7 @@ public class QnaJpaEntity extends BaseJpaEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    public QnaJpaEntity(String businessId, String courseUuid, String sectionUuid, String lectureUuid, String authorId, String title, String content, LocalDateTime createdAt) {
+    public QnaJpaEntity(String businessId, String courseUuid, String sectionUuid, String lectureUuid, String authorId, String title, String content) {
         this.businessId = businessId;
         this.courseUuid = courseUuid;
         this.sectionUuid = sectionUuid;
@@ -48,6 +46,5 @@ public class QnaJpaEntity extends BaseJpaEntity {
         this.authorId = authorId;
         this.title = title;
         this.content = content;
-        this.createdAt = createdAt;
     }
 }
