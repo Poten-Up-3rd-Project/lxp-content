@@ -3,7 +3,7 @@ package com.lxp.content.course.domain.model;
 import com.lxp.common.domain.event.AggregateRoot;
 import com.lxp.common.domain.policy.BusinessRuleValidator;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
-import com.lxp.content.course.domain.exception.CourseException;
+import com.lxp.content.course.domain.event.CourseDeletedEvent;
 import com.lxp.content.course.domain.model.collection.CourseSections;
 import com.lxp.content.course.domain.model.collection.CourseTags;
 import com.lxp.content.course.domain.model.enums.Level;
@@ -12,12 +12,12 @@ import com.lxp.content.course.domain.model.vo.CourseDescription;
 import com.lxp.content.course.domain.model.vo.CourseTitle;
 import com.lxp.content.course.domain.model.vo.duration.CourseDuration;
 import com.lxp.content.course.domain.model.vo.duration.LectureDuration;
-import com.lxp.content.course.domain.rule.LectureMinCountRule;
-import com.lxp.content.course.domain.rule.SectionMinCountRule;
-import com.lxp.content.course.domain.rule.TagMinCountRule;
+import com.lxp.content.course.domain.rule.*;
 import com.lxp.content.course.domain.service.spec.CourseMetaUpdateSpec;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 
 public class Course extends AggregateRoot<CourseUUID> {
@@ -32,6 +32,7 @@ public class Course extends AggregateRoot<CourseUUID> {
     private CourseTags tags;
     private Instant createdAt;
     private Instant updatedAt;
+    private Instant deletedAt;
 
     private Course(
             Long id,
@@ -108,9 +109,10 @@ public class Course extends AggregateRoot<CourseUUID> {
             CourseSections sections,
             CourseTags tags,
             Instant createdAt,
-            Instant updatedAt
+            Instant updatedAt,
+            Instant deletedAt
     ) {
-        return new Course(
+        Course course =  new Course(
                 id,
                 uuid,
                 instructorUUID,
@@ -123,6 +125,14 @@ public class Course extends AggregateRoot<CourseUUID> {
                 createdAt,
                 updatedAt
         );
+        course.deletedAt = deletedAt;
+        return course;
+    }
+
+    private void ensureModifiable(InstructorUUID requestInstructorId) {
+        BusinessRuleValidator.validateAll(
+                new NotModifiedRule(this.deletedAt, this.uuid),
+                new CourseOwnerRule(this.instructorUUID, requestInstructorId));
     }
 
     private static void validateCreationInvariant(
@@ -150,7 +160,8 @@ public class Course extends AggregateRoot<CourseUUID> {
     }
 
     //setters
-    public void apply(CourseMetaUpdateSpec changeSet) {
+    public void apply(CourseMetaUpdateSpec changeSet, InstructorUUID requestInstructorId) {
+        ensureModifiable(requestInstructorId);
         changeSet.title().ifPresent(this::rename);
         changeSet.description().ifPresent(this::changeDescription);
         changeSet.thumbnailUrl().ifPresent(this::changeThumbnailUrl);
@@ -174,6 +185,15 @@ public class Course extends AggregateRoot<CourseUUID> {
         this.thumbnailUrl = thumbnailUrl;
     }
 
+    public void delete(InstructorUUID requestInstructorId) {
+        ensureModifiable(requestInstructorId);
+        this.deletedAt = Instant.now();
+
+        this.registerEvent(new CourseDeletedEvent(
+                uuid.value(),
+                LocalDateTime.ofInstant(deletedAt, ZoneId.systemDefault())
+        ));
+    }
 
     //section
     public void addSection(SectionUUID uuid, String title) {
@@ -243,6 +263,7 @@ public class Course extends AggregateRoot<CourseUUID> {
     public Instant createdAt() { return createdAt; }
     public Instant updatedAt() { return updatedAt; }
     public Level level() { return difficulty; }
+    public Instant deleted() { return deletedAt; }
 
     public CourseDuration totalDuration() {
         return sections.totalDuration();

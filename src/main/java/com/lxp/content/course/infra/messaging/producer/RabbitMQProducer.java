@@ -14,26 +14,46 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RabbitMQProducer implements EventProducer {
 
+    private static final String COURSE_EXCHANGE = "course.events";
+    private static final String CONTENT_EXCHANGE = "content.events";
+    private static final String DLQ_EXCHANGE = "dlq.events";
+
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final String EXCHANGE = "course.exchange";
 
+    private String resolveExchange(String eventType) {
+        if (eventType.startsWith("course.")) {
+            return COURSE_EXCHANGE;
+        } else if (eventType.startsWith("qna.")) {
+            return CONTENT_EXCHANGE;
+        }
+
+        throw new IllegalArgumentException("Unknown event type: " + eventType);
+    }
 
     @Override
     public void send(IntegrationEvent event) {
+        String json = serialize(event);
+        String exchange = resolveExchange(event.getEventType());
+
         try {
-            String routingKey = event.getEventType();
-            String json = toJson(event);
-            rabbitTemplate.convertAndSend(EXCHANGE, routingKey, json);
-        } catch (EventSerializationException e) {
-            throw e;
+            rabbitTemplate.convertAndSend(exchange, event.getEventType(), json);
         } catch (Exception e) {
             throw new EventPublishException("Failed to send event: " + event.getEventId(), e);
         }
     }
 
-    private String toJson(IntegrationEvent event) {
+    @Override
+    public void sendToDlq(String payload, String eventType) {
+        try {
+            rabbitTemplate.convertAndSend(DLQ_EXCHANGE, eventType, payload);
+        } catch (Exception e) {
+            throw new EventPublishException("Failed to send event to DLQ: " + eventType, e);
+        }
+    }
+
+    private String serialize(IntegrationEvent event) {
         try {
             return objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException e) {

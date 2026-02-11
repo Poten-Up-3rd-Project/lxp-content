@@ -84,7 +84,7 @@ class CourseProgressMapperTest {
 
     @Test
     @DisplayName("TC-CPM-001: CourseProgress 도메인을 엔티티로 변환할 때 모든 필드가 매핑 되어야 한다")
-    void toEntityWithChildrenTest() {
+    void shouldMapAllField_WhenChangeDomainToEntity() {
         // when
         CourseProgressJpaEntity entity = courseMapper.toEntity(testDomain);
 
@@ -107,7 +107,7 @@ class CourseProgressMapperTest {
 
     @Test
     @DisplayName("TC-CPM-002: 엔티티에서 도메인으로 복구 시 모든 필드가 정확히 매핑된다")
-    void toDomainCompleteTest() {
+    void shouldMapAllField_WhenChangeEntityToDomain() {
         // when
         CourseProgress domain = courseMapper.toDomain(testEntity);
 

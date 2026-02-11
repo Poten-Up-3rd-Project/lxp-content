@@ -6,6 +6,8 @@ import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.LectureProgressId;
 import com.lxp.content.progress.domain.model.vo.UserId;
 import com.lxp.content.progress.domain.policy.CompletionPolicy;
+import com.lxp.content.progress.exception.ProgressDomainException;
+import com.lxp.content.progress.exception.ProgressErrorCode;
 
 import java.util.Objects;
 
@@ -58,7 +60,7 @@ public class LectureProgress extends BaseEntity<LectureProgressId> {
         }
 
         if(lastPlayedTimeInSeconds > this.totalDurationInSeconds) {
-            throw new IllegalArgumentException("lastPlayedTimeInSeconds는 totalDurationInSeconds보다 클 수 없습니다.");
+            throw new ProgressDomainException(ProgressErrorCode.INVALID_LAST_PLAYED_TIME_VALUE);
         }
 
         this.lastPlayedTimeInSeconds = lastPlayedTimeInSeconds;

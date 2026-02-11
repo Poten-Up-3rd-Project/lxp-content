@@ -33,6 +33,7 @@ public class CourseEntityMapper implements DomainMapper<Course, CourseJpaEntity>
                                 .map(TagId::value)
                                 .toList()
                 )
+                .deletedAt(course.deleted())
                 .build();
 
         for (Section sectionDomain : course.sections().values()) {
@@ -82,7 +83,8 @@ public class CourseEntityMapper implements DomainMapper<Course, CourseJpaEntity>
                 mapSectionsToDomain(entity.getSections()),
                 mapTagsToDomain(entity.getTags()),
                 entity.getCreatedAt().toInstant(ZoneOffset.UTC),
-                entity.getUpdatedAt().toInstant(ZoneOffset.UTC)
+                entity.getUpdatedAt().toInstant(ZoneOffset.UTC),
+                entity.getDeletedAt()
         );
     }
 

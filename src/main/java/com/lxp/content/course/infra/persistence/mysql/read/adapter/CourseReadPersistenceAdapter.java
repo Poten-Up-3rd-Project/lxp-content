@@ -3,7 +3,6 @@ package com.lxp.content.course.infra.persistence.mysql.read.adapter;
 import com.lxp.common.domain.pagination.Page;
 import com.lxp.common.domain.pagination.PageRequest;
 import com.lxp.common.infrastructure.persistence.PageConverter;
-import com.lxp.content.course.application.port.provider.view.CourseView;
 import com.lxp.content.course.application.projection.CourseReadModel;
 import com.lxp.content.course.application.projection.repository.CourseReadRepository;
 import com.lxp.content.course.infra.persistence.mysql.read.mapper.CourseReadEntityMapper;
@@ -39,6 +38,11 @@ public class CourseReadPersistenceAdapter implements CourseReadRepository {
     @Override
     public Boolean existsById(String courseId) {
         return courseReadJpaRepository.existsById(courseId);
+    }
+
+    @Override
+    public void deleteById(String courseId) {
+        courseReadJpaRepository.deleteById(courseId);
     }
 
     @Override

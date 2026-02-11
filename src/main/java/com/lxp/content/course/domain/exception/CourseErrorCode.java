@@ -18,15 +18,15 @@ public enum CourseErrorCode implements ErrorCode {
     // Course
     COURSE_NOT_FOUND("COURSE_008", "Course not found", "NOT_FOUND"),
     COURSE_ALREADY_EXISTS("COURSE_009", "Course already exists", "CONFLICT"),
-
+    COURSE_ALREADY_DELETED("COURSE_015", "Course already deleted", "BAD_REQUEST"),
     // Tag
     TAG_NOT_FOUND("COURSE_010", "Tag not found", "NOT_FOUND"),
     TAG_DUPLICATE("COURSE_011", "Duplicate tag", "CONFLICT"),
     // 1개 이상 5개 이하 제약조건
     TAG_VIOLATION("COURSE_012", "Course must have at least one tag and at most five tags", "BAD_REQUEST"),
 
-    INVALID_INSTRUCTOR("COURSE_013", "Invalid instructor", "BAD_REQUEST")
-    ;
+    INVALID_INSTRUCTOR("COURSE_013", "Invalid instructor", "BAD_REQUEST"),
+    FORBIDDEN_COURSE_MODIFY("COURSE_016", "You do not have permission to modify this course", "FORBIDDEN");
 
     private final String code;
     private final String message;

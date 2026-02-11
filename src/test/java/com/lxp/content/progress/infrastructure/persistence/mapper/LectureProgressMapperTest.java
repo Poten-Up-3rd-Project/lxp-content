@@ -59,7 +59,7 @@ class LectureProgressMapperTest {
 
     @Test
     @DisplayName("TC-LPM-001: 도메인 모델을 엔티티로 변환 시 모든 필드 값이 유지되어야 한다")
-    void shouldMapDomainToEntityWithRandomIds() {
+    void shouldMapAllField_WhenChangeDomainToEntity() {
         // when
         LectureProgressJpaEntity result = mapper.toEntity(testDomain);
 
@@ -74,7 +74,7 @@ class LectureProgressMapperTest {
 
     @Test
     @DisplayName("엔티티를 도메인으로 변환 시 모든 필드 값이 VO로 올바르게 주입되어야 한다")
-    void shouldMapEntityToDomainWithRandomIds() {
+    void shouldInjectAllFieldAsValueObject_WhenChangeEntityToDomain() {
         // when
         LectureProgress result = mapper.toDomain(testEntity);
 

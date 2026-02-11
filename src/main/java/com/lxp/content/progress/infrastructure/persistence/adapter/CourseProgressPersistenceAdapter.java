@@ -1,8 +1,9 @@
 package com.lxp.content.progress.infrastructure.persistence.adapter;
 
+import com.lxp.content.progress.application.port.out.LoadCourseProgressPort;
+import com.lxp.content.progress.application.port.out.SaveCourseProgressPort;
 import com.lxp.content.progress.domain.model.CourseProgress;
 import com.lxp.content.progress.domain.model.vo.*;
-import com.lxp.content.progress.domain.repository.CourseProgressRepository;
 import com.lxp.content.progress.infrastructure.persistence.entity.CourseProgressJpaEntity;
 import com.lxp.content.progress.infrastructure.persistence.mapper.CourseProgressMapper;
 import com.lxp.content.progress.infrastructure.persistence.repository.JpaCourseProgressRepository;
@@ -19,15 +20,15 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
-public class CourseProgressPersistenceAdapter implements CourseProgressRepository {
+public class CourseProgressPersistenceAdapter implements SaveCourseProgressPort, LoadCourseProgressPort {
 
     private final JpaCourseProgressRepository jpaRepository;
     private final CourseProgressMapper courseProgressMapper;
 
     @Override
     @Transactional(readOnly = true)
-    public List<CourseProgress> findByUserId(UserId id) {
-        List<CourseProgressJpaEntity> progresses = jpaRepository.findByUserIdWithLecture(id.value());
+    public List<CourseProgress> findByUserId(String id) {
+        List<CourseProgressJpaEntity> progresses = jpaRepository.findByUserIdWithLecture(id);
 
         return progresses.stream()
                 .map(courseProgressMapper::toDomain)
@@ -36,8 +37,8 @@ public class CourseProgressPersistenceAdapter implements CourseProgressRepositor
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<CourseProgress> findByUserIdAndCourseId(UserId userId, CourseId courseId) {
-        return jpaRepository.findByUserIdAndCourseIdWithLectures(userId.value(), courseId.value())
+    public Optional<CourseProgress> findByUserIdAndCourseId(String userId, String courseId) {
+        return jpaRepository.findByUserIdAndCourseIdWithLectures(userId, courseId)
                 .map(courseProgressMapper::toDomain);
     }
 

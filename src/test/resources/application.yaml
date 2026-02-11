@@ -8,6 +8,9 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
+  task:
+    scheduling:
+      enabled: false
 
 passport:
   key:
@@ -16,3 +19,6 @@ passport:
 services:
   user:
     url: http://lxp-user:8080
+
+r2:
+  enabled: false

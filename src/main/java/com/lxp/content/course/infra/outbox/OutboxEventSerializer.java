@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lxp.common.application.event.IntegrationEvent;
 import com.lxp.common.infrastructure.persistence.OutboxEvent;
 import com.lxp.content.course.application.event.integration.CourseCreatedIntegrationEvent;
+import com.lxp.content.course.qna.application.event.integration.QnaCreatedIntegrationEvent;
 import com.lxp.content.course.infra.messaging.exception.EventSerializationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ public class OutboxEventSerializer {
     private Class<? extends IntegrationEvent> resolveEventClass(String eventType) {
         return switch (eventType) {
             case "course.created" -> CourseCreatedIntegrationEvent.class;
+            case "qna.created" -> QnaCreatedIntegrationEvent.class;
 //            case "course.updated" -> CourseUpdatedIntegrationEvent.class;
 //            case "course.deleted" -> CourseDeletedIntegrationEvent.class;
             default -> throw new IllegalArgumentException("Unknown event type: " + eventType);

@@ -19,8 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/internal/api-v1/courses")
+@RestController("/api-v1/internal/courses")
 @RequiredArgsConstructor
 public class CourseInternalController {
 

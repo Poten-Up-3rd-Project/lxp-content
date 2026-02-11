@@ -1,31 +1,27 @@
 package com.lxp.content.course.application.event.policy;
 
 import com.lxp.common.application.event.IntegrationEvent;
+import com.lxp.common.application.event.policy.EventPublishPolicy;
 import com.lxp.content.course.application.event.integration.EventMetadata;
 
 public record IntegrationEventPublishCommand(
         IntegrationEvent event,
-        DeliveryPolicy policy,
+        EventPublishPolicy policy,
         EventMetadata metadata
 ) {
-    public static IntegrationEventPublishCommand outbox(
+    public static IntegrationEventPublishCommand of(
             IntegrationEvent event,
+            EventPublishPolicy policy,
             EventMetadata metadata
     ) {
-        return new IntegrationEventPublishCommand(
-                event,
-                DeliveryPolicy.OUTBOX_REQUIRED,
-                metadata
-        );
+        return new IntegrationEventPublishCommand(event, policy, metadata);
     }
 
-    public static IntegrationEventPublishCommand fireAndForget(
-            IntegrationEvent event
+
+    public static IntegrationEventPublishCommand withoutMetadata(
+            IntegrationEvent event,
+            EventPublishPolicy policy
     ) {
-        return new IntegrationEventPublishCommand(
-                event,
-                DeliveryPolicy.FIRE_AND_FORGET,
-                null
-        );
+        return new IntegrationEventPublishCommand(event, policy, null);
     }
 }

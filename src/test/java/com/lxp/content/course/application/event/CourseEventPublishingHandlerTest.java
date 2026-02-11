@@ -1,11 +1,18 @@
 package com.lxp.content.course.application.event;
 
+import com.lxp.common.application.event.policy.EventPolicyRegistry;
+import com.lxp.common.application.event.policy.EventPublishPolicy;
+import com.lxp.common.application.event.policy.delivery.AtLeastOnce;
+import com.lxp.common.application.event.policy.delivery.AtMostOnce;
+import com.lxp.common.application.event.policy.failure.DropOnFailure;
+import com.lxp.common.application.event.policy.failure.RetryThenDlq;
+import com.lxp.common.application.event.policy.ordering.Parallel;
+import com.lxp.common.application.event.policy.priority.LowPriority;
+import com.lxp.common.application.event.policy.priority.NormalPriority;
 import com.lxp.content.course.application.event.handler.CourseEventPublishingHandler;
 import com.lxp.content.course.application.event.integration.CourseCreatedIntegrationEvent;
 import com.lxp.content.course.application.event.integration.payload.CourseCreatedPayload;
 import com.lxp.content.course.application.event.mapper.CourseIntegrationEventMapper;
-import com.lxp.content.course.application.event.policy.DeliveryPolicy;
-import com.lxp.content.course.application.event.policy.DeliveryPolicyResolver;
 import com.lxp.content.course.application.event.policy.IntegrationEventPublishCommand;
 import com.lxp.content.course.application.event.policy.IntegrationEventRegistry;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
@@ -20,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,13 +46,27 @@ class CourseEventPublishingHandlerTest {
     private CourseIntegrationEventMapper mapper;
 
     @Mock
-    private DeliveryPolicyResolver policyResolver;
+    private EventPolicyRegistry policyRegistry;
 
     @InjectMocks
     private CourseEventPublishingHandler handler;
 
     private CourseCreatedEvent domainEvent;
     private CourseCreatedIntegrationEvent integrationEvent;
+
+    private static final EventPublishPolicy OUTBOX_POLICY = new EventPublishPolicy(
+            new AtLeastOnce(),
+            new NormalPriority(),
+            new Parallel(),
+            new RetryThenDlq(3, Duration.ofSeconds(5))
+    );
+
+    static final EventPublishPolicy FIRE_AND_FORGET_POLICY = new EventPublishPolicy(
+            new AtMostOnce(),
+            new LowPriority(),
+            new Parallel(),
+            new DropOnFailure()
+    );
 
     @BeforeEach
     void setUp() {
@@ -62,14 +84,14 @@ class CourseEventPublishingHandlerTest {
     }
 
     @Nested
-    @DisplayName("handleBeforeCommit (OUTBOX_REQUIRED)")
+    @DisplayName("handleBeforeCommit (Outbox 필요)")
     class HandleBeforeCommit {
 
         @Test
-        @DisplayName("OUTBOX_REQUIRED 정책이면 Registry에 등록한다")
+        @DisplayName("AtLeastOnce 정책이면 Registry에 등록한다")
         void registersWhenOutboxRequired() {
             // given
-            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.OUTBOX_REQUIRED);
+            given(policyRegistry.resolve(domainEvent)).willReturn(OUTBOX_POLICY);
             given(mapper.toIntegrationEvent(domainEvent)).willReturn(integrationEvent);
 
             // when
@@ -82,7 +104,7 @@ class CourseEventPublishingHandlerTest {
             verify(registry).register(captor.capture());
 
             IntegrationEventPublishCommand command = captor.getValue();
-            assertThat(command.policy()).isEqualTo(DeliveryPolicy.OUTBOX_REQUIRED);
+            assertThat(command.policy().delivery().requiresOutbox()).isTrue();
             assertThat(command.event().getEventId()).isEqualTo(domainEvent.getEventId());
             assertThat(command.metadata()).isNotNull();
             assertThat(command.metadata().aggregateId()).isEqualTo("course-123");
@@ -90,10 +112,10 @@ class CourseEventPublishingHandlerTest {
         }
 
         @Test
-        @DisplayName("FIRE_AND_FORGET 정책이면 Registry에 등록하지 않는다")
+        @DisplayName("AtMostOnce 정책이면 Registry에 등록하지 않는다")
         void doesNotRegisterWhenFireAndForget() {
             // given
-            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.FIRE_AND_FORGET);
+            given(policyRegistry.resolve(domainEvent)).willReturn(FIRE_AND_FORGET_POLICY);
 
             // when
             handler.handleBeforeCommit(domainEvent);
@@ -104,14 +126,14 @@ class CourseEventPublishingHandlerTest {
     }
 
     @Nested
-    @DisplayName("handleAfterCommit (FIRE_AND_FORGET)")
+    @DisplayName("handleAfterCommit (Fire-and-Forget)")
     class HandleAfterCommit {
 
         @Test
-        @DisplayName("FIRE_AND_FORGET 정책이면 Registry에 등록한다")
+        @DisplayName("AtMostOnce 정책이면 Registry에 등록한다")
         void registersWhenFireAndForget() {
             // given
-            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.FIRE_AND_FORGET);
+            given(policyRegistry.resolve(domainEvent)).willReturn(FIRE_AND_FORGET_POLICY);
             given(mapper.toIntegrationEvent(domainEvent)).willReturn(integrationEvent);
 
             // when
@@ -124,16 +146,16 @@ class CourseEventPublishingHandlerTest {
             verify(registry).register(captor.capture());
 
             IntegrationEventPublishCommand command = captor.getValue();
-            assertThat(command.policy()).isEqualTo(DeliveryPolicy.FIRE_AND_FORGET);
+            assertThat(command.policy().delivery().requiresOutbox()).isFalse();
             assertThat(command.event().getEventId()).isEqualTo(domainEvent.getEventId());
             assertThat(command.metadata()).isNull();
         }
 
         @Test
-        @DisplayName("OUTBOX_REQUIRED 정책이면 Registry에 등록하지 않는다")
+        @DisplayName("AtLeastOnce 정책이면 Registry에 등록하지 않는다")
         void doesNotRegisterWhenOutboxRequired() {
             // given
-            given(policyResolver.resolve(domainEvent)).willReturn(DeliveryPolicy.OUTBOX_REQUIRED);
+            given(policyRegistry.resolve(domainEvent)).willReturn(OUTBOX_POLICY);
 
             // when
             handler.handleAfterCommit(domainEvent);

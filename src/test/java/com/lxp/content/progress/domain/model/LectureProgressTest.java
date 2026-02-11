@@ -5,6 +5,8 @@ import com.lxp.content.progress.domain.model.vo.LectureId;
 import com.lxp.content.progress.domain.model.vo.UserId;
 import com.lxp.content.progress.domain.policy.CompletionPolicy;
 import com.lxp.content.progress.domain.policy.DefaultCompletionPolicy;
+import com.lxp.content.progress.exception.ProgressDomainException;
+import com.lxp.content.progress.exception.ProgressErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -92,9 +94,12 @@ class LectureProgressTest {
         @Test
         @DisplayName("TC-LP-002-2: 재생 시간이 전체 재생 시간을 초과하는 경우 예외가 발생해야 한다")
         void shouldThrowException_WhenLastPlayedTimeExceedsTotalDuration() {
-            Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            ProgressDomainException exception = assertThrows(ProgressDomainException.class, () ->
                 lectureProgress.updateLastPlayedTime(700, completionPolicy),
                 "재생 시간이 전체 재생 시간을 초과하는 경우 올바른 예외 메시지가 반환되어야 한다");
+            assertEquals(ProgressErrorCode.INVALID_LAST_PLAYED_TIME_VALUE.getCode(),
+                    exception.getErrorCode().getCode(),
+                    "올바른 에러 코드가 반환되어야 한다");
         }
     }
 

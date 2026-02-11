@@ -1,7 +1,7 @@
 package com.lxp.content.course.application.event.policy;
 
-import com.lxp.common.application.event.IntegrationEvent;
-import com.lxp.content.course.application.event.integration.EventMetadata;
+import com.lxp.common.application.event.policy.EventPublishPolicy;
+import com.lxp.common.infrastructure.persistence.OutboxOptions;
 import com.lxp.content.course.application.port.required.EventProducer;
 import com.lxp.content.course.application.port.required.OutboxEventStore;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +16,16 @@ public class DefaultIntegrationEventRegistry implements IntegrationEventRegistry
 
     @Override
     public void register(IntegrationEventPublishCommand command) {
-        switch (command.policy()) {
-            case OUTBOX_REQUIRED -> outboxStore.save(command.event(), command.metadata());
-            case FIRE_AND_FORGET -> producer.send(command.event());
+        EventPublishPolicy policy = command.policy();
+
+        if (policy.delivery().requiresOutbox()) {
+            outboxStore.save(
+                    command.event(),
+                    command.metadata(),
+                    OutboxOptions.from(policy, command.event())
+            );
+        } else {
+            producer.send(command.event());
         }
     }
 }

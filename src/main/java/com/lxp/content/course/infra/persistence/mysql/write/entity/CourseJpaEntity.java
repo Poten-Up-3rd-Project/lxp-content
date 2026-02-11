@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,10 +56,13 @@ public class CourseJpaEntity extends BaseVersionedJpaEntity {
     @OrderColumn(name = "tag_order")
     private List<Long> tags = new ArrayList<>();
 
+    @Getter
+    private Instant deletedAt;
+
     @Builder
     public CourseJpaEntity(String uuid, String instructorUUID, String title,
                            String description, String thumbnailUrl,
-                           Level difficulty, List<Long> tags) {
+                           Level difficulty, List<Long> tags, Instant deletedAt) {
         this.uuid = uuid;
         this.instructorUUID = instructorUUID;
         this.title = title;
@@ -66,10 +70,12 @@ public class CourseJpaEntity extends BaseVersionedJpaEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.difficulty = difficulty;
         this.tags = tags != null ? tags : new ArrayList<>();
+        this.deletedAt = deletedAt;
     }
 
     public void addSection(SectionJpaEntity section) {
         this.sections.add(section);
         section.assignCourse(this);
     }
+
 }

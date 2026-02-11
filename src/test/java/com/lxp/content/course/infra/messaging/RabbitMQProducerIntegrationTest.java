@@ -52,7 +52,7 @@ class RabbitMQProducerIntegrationTest {
     private RabbitAdmin rabbitAdmin;
     private ObjectMapper objectMapper;
 
-    private static final String EXCHANGE = "course.exchange";
+    private static final String EXCHANGE = "course.events";
     private static final String QUEUE = "course.created.queue";
     private static final String ROUTING_KEY = "course.created";
 

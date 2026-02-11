@@ -50,7 +50,6 @@ public class CourseDetailServiceTest {
     void setUp() {
         courseRepository.deleteAll();
 
-        // 1. Mock 설정 (외부 서비스 호출 시뮬레이션)
         when(userQueryPort.getInstructorInfo(INSTRUCTOR_UUID))
                 .thenReturn(new InstructorResult(
                         INSTRUCTOR_UUID,
@@ -76,12 +75,14 @@ public class CourseDetailServiceTest {
 
         courseRepository.save(entity);
     }
-
     @Test
     @DisplayName("코스 상세 정보가 정상적으로 조회되어야 한다")
     void should_return_course_detail_view_successfully() {
         // Given
         CourseDetailQuery query = new CourseDetailQuery(COURSE_UUID);
+
+
+        Mockito.clearInvocations(userQueryPort, tagQueryPort);
 
         // When
         CourseDetailView result = courseDetailService.execute(query);
@@ -97,7 +98,9 @@ public class CourseDetailServiceTest {
         assertThat(result.tags()).isNotNull();
         assertThat(result.tags().size()).isEqualTo(2);
 
+
         Mockito.verify(userQueryPort, times(1)).getInstructorInfo(INSTRUCTOR_UUID);
         Mockito.verify(tagQueryPort, times(1)).findTagByIds(TAG_IDS);
     }
+
 }
