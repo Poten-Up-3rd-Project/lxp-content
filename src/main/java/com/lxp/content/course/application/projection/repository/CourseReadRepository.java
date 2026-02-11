@@ -12,6 +12,6 @@ public interface CourseReadRepository extends ReadModelRepository<CourseReadMode
     Page<CourseReadModel> search(String keyword, PageRequest pageable);
     void save(CourseReadModel course);
     Boolean existsById(String courseId);
-
+    void deleteById(String courseId);
     List<CourseReadModel> filter(List<String> strings, List<String> difficulties, int count);
 }

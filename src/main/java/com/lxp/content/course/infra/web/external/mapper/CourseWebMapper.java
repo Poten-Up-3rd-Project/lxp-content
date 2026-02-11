@@ -2,6 +2,7 @@ package com.lxp.content.course.infra.web.external.mapper;
 
 import com.lxp.common.domain.pagination.Page;
 import com.lxp.content.course.application.port.provider.command.CourseCreateCommand;
+import com.lxp.content.course.application.port.provider.command.CourseDeleteCommand;
 import com.lxp.content.course.application.port.provider.view.CourseDetailView;
 import com.lxp.content.course.application.port.provider.view.CourseView;
 import com.lxp.content.course.application.port.provider.view.InstructorView;
@@ -17,6 +18,10 @@ import java.util.List;
 
 @Component
 public class CourseWebMapper {
+
+    public CourseDeleteCommand toDeleteCommand(String userId, String courseId) {
+        return new CourseDeleteCommand(userId, courseId);
+    }
 
     public CourseCreateCommand toCreateCommand(String userId, CourseCreateRequest request) {
         return new CourseCreateCommand(

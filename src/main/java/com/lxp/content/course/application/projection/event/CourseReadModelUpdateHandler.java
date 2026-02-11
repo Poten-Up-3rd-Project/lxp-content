@@ -8,6 +8,7 @@ import com.lxp.content.course.application.port.required.dto.TagResult;
 import com.lxp.content.course.application.projection.CourseReadModel;
 import com.lxp.content.course.application.projection.repository.CourseReadRepository;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
+import com.lxp.content.course.domain.event.CourseDeletedEvent;
 import com.lxp.content.course.domain.event.CrudEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.retry.annotation.Backoff;
@@ -34,18 +35,15 @@ public class CourseReadModelUpdateHandler implements ReadModelUpdater<CrudEvent>
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
-    @TransactionalEventListener(classes = { CourseCreatedEvent.class })
+    @TransactionalEventListener(classes = { CourseCreatedEvent.class, CourseDeletedEvent.class })
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void update(CrudEvent event) {
-        // Guard against non-course events (e.g., QnaCreatedEvent)
-        if (!(event instanceof CourseCreatedEvent c)) {
-            return;
-        }
-        switch (c.getCrudType()) {
-            case CREATED -> onCreate(c);
+
+        switch (event.getCrudType()) {
+            case CREATED -> onCreate((CourseCreatedEvent) event);
 //            case UPDATED -> onUpdate((CourseUpdatedEvent) c);
-//            case DELETED -> onDelete((CourseDeletedEvent) c);
+            case DELETED -> onDelete((CourseDeletedEvent) event);
         }
     }
 
@@ -55,7 +53,6 @@ public class CourseReadModelUpdateHandler implements ReadModelUpdater<CrudEvent>
     }
 
     private void onCreate(CourseCreatedEvent event) {
-        System.out.println("Handling CourseCreatedEvent for course ID: " + event.getAggregateId());
         String instructorName = userQueryPort.getInstructorInfo(event.getInstructorUuid())
                 .name();
         List<TagResult> tagResults = tagQueryPort.findTagByIds(event.getTagIds());
@@ -84,7 +81,10 @@ public class CourseReadModelUpdateHandler implements ReadModelUpdater<CrudEvent>
 //                .ifPresent(entity -> entity.update(event));
 //    }
 //
-//    private void onDelete(CourseDeletedEvent event) {
-//        repository.deleteByUuid(event.getAggregateId());
-//    }
+private void onDelete(CourseDeletedEvent event) {
+    readRepository.findById(event.getAggregateId())
+            .ifPresent(
+                    model -> readRepository.deleteById(model.uuid())
+            );
+}
 }
