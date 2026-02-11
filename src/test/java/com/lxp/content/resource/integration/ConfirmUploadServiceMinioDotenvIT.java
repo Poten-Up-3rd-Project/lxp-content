@@ -86,7 +86,7 @@ class ConfirmUploadServiceMinioDotenvIT {
         } catch (Exception ignored) {
         }
 
-        String key = "videos/u-dotenv/minio-it-object";
+        String key = "videos/minio-it-object";
         s3.putObject(
             PutObjectRequest.builder().bucket(bucket).key(key).contentType("video/mp4").build(),
             software.amazon.awssdk.core.sync.RequestBody.fromString("hello", StandardCharsets.UTF_8)

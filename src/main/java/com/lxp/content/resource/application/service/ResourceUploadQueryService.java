@@ -26,14 +26,14 @@ public class ResourceUploadQueryService implements GenerateUploadUrlUseCase {
 
     @Override
     public PresignedUrlResult execute(GenerateUploadUrlQuery query) {
-        UploadType type = query.contentType();
-        String key = String.format("%s/%s/%s", type.keyPrefix(), query.userId(), UUID.randomUUID());
+        UploadType type = query.uploadType();
+        type.isNotSupportedThenThrow(query.contentType());
+        String key = String.format("%s/%s", type.keyPrefix(), UUID.randomUUID());
 
         Resource resource = Resource.requested(query.userId(), key, type);
         resourceRepository.save(resource);
 
         Duration ttl = Duration.ofSeconds(defaultTtlSeconds);
-        String mime = type.defaultContentType();
-        return storagePresignPort.generateUploadUrl(key, mime, ttl);
+        return storagePresignPort.generateUploadUrl(key, query.contentType(), ttl);
     }
 }
