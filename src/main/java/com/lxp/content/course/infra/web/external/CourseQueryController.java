@@ -25,7 +25,7 @@ public class CourseQueryController {
     private final CourseDetailUseCase courseDetailUseCase;
     private final CourseWebMapper mapper;
 
-    @GetMapping("/search")
+    @GetMapping("/public/search")
     public ResponseEntity<Page<CourseResponse>> search(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -40,7 +40,7 @@ public class CourseQueryController {
         return ResponseEntity.ok(mapper.toPageResponse(view));
     }
 
-    @GetMapping("/{courseId}")
+    @GetMapping("/public/{courseId}")
     public ResponseEntity<CourseDetailResponse> get(
             @PathVariable("courseId") String courseId
     ){
@@ -50,4 +50,5 @@ public class CourseQueryController {
 
         return ResponseEntity.ok(mapper.toDetailResponse(view));
     }
+
 }
