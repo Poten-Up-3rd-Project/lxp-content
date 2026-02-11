@@ -52,12 +52,12 @@ public class QnaController {
         return new QnaCreateResponse(res.id());
     }
 
-    @GetMapping("/qna/{qnaId}")
+    @GetMapping("/qna/public/{qnaId}")
     public GetQnaQuery.QnaView get(@PathVariable String qnaId) {
         return getQnaQuery.byId(qnaId);
     }
 
-    @GetMapping("/lectures/{lectureUuid}/qna")
+    @GetMapping("/lectures/public/{lectureUuid}/qna")
     public List<GetQnaQuery.QnaView> listByLecture(@PathVariable String lectureUuid) {
         return getQnaQuery.byLecture(lectureUuid);
     }
@@ -89,7 +89,7 @@ public class QnaController {
         return new AddAnswerResponse(res.id());
     }
 
-    @GetMapping("/qna/{qnaId}/answers")
+    @GetMapping("/qna/public/{qnaId}/answers")
     public java.util.List<GetQnaAnswersQuery.AnswerView> listAnswers(@PathVariable String qnaId) {
         return getQnaAnswersQuery.byQnaId(qnaId);
     }

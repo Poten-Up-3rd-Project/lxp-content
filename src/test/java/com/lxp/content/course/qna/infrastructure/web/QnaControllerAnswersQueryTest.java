@@ -51,7 +51,7 @@ class QnaControllerAnswersQueryTest {
         );
         Mockito.when(getQnaAnswersQuery.byQnaId(anyString())).thenReturn(list);
 
-        mockMvc.perform(get("/api-v1/qna/{id}/answers", "qna-1")
+        mockMvc.perform(get("/api-v1/qna/public/{id}/answers", "qna-1")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1L))
