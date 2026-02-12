@@ -7,11 +7,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,5 +56,19 @@ public class CloudflareR2PresignAdapter implements StoragePresignPort {
             .build();
 
         return presigner.presignPutObject(presignRequest);
+    }
+
+    public URL getPresignedUrl(String key) {
+        GetObjectRequest objectRequest = GetObjectRequest.builder()
+            .bucket(props.getBucket())
+            .key(key)
+            .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+            .signatureDuration(Duration.ofSeconds(props.getDefaultTtlSeconds()))
+            .getObjectRequest(objectRequest)
+            .build();
+
+        return presigner.presignGetObject(presignRequest).url();
     }
 }

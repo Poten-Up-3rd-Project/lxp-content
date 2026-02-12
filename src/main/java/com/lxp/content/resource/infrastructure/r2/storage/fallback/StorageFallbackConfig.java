@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
 
@@ -27,6 +28,11 @@ public class StorageFallbackConfig {
             public PresignedUrlResult generateUploadUrl(String key, String contentType, Duration ttl) {
                 // Return a predictable dummy URL and empty headers so services depending on it can proceed in tests
                 return new PresignedUrlResult(key, "http://localhost/disabled-presign/" + key, "PUT", Map.of());
+            }
+
+            @Override
+            public URL getPresignedUrl(String key) {
+                return null;
             }
         };
     }
