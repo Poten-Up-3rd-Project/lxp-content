@@ -73,7 +73,7 @@ class RabbitMQProducerIntegrationTest {
     }
 
     @Test
-    @DisplayName("IntegrationEvent를 RabbitMQ로 발행한다")
+    @DisplayName("IntegrationEvent를 RabbitMQ로 JSON 형식으로 발행한다")
     void send_publishesEventToRabbitMQ() {
         // given
         CourseCreatedIntegrationEvent event = createIntegrationEvent("course-123");
@@ -85,6 +85,7 @@ class RabbitMQProducerIntegrationTest {
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
             Message message = rabbitTemplate.receive(QUEUE, 1000);
             assertThat(message).isNotNull();
+            assertThat(message.getMessageProperties().getContentType()).isEqualTo("application/json");
 
             String body = new String(message.getBody());
             assertThat(body).contains("course-123");
@@ -104,6 +105,7 @@ class RabbitMQProducerIntegrationTest {
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
             Message message = rabbitTemplate.receive(QUEUE, 1000);
             assertThat(message).isNotNull();
+            assertThat(message.getMessageProperties().getContentType()).isEqualTo("application/json");
 
             String body = new String(message.getBody());
             JsonNode json = objectMapper.readTree(body);

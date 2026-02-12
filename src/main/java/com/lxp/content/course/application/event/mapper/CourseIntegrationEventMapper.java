@@ -1,6 +1,7 @@
 package com.lxp.content.course.application.event.mapper;
 
 import com.lxp.common.application.event.IntegrationEvent;
+import com.lxp.content.course.application.event.integration.CourseDeletedIntegrationEvent;
 import com.lxp.content.course.domain.event.CourseCreatedEvent;
 import com.lxp.content.course.domain.event.CrudEvent;
 import com.lxp.content.course.application.event.integration.CourseCreatedIntegrationEvent;
@@ -66,7 +67,4 @@ public class CourseIntegrationEventMapper {
                 payload
         );
     }
-
-
-
 }
