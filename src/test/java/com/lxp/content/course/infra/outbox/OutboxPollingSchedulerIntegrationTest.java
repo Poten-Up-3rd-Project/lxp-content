@@ -103,7 +103,7 @@ class OutboxPollingSchedulerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Scheduler가 PENDING 이벤트를 발행하고 PUBLISHED로 변경한다")
+    @DisplayName("Scheduler가 PENDING 이벤트를 JSON 형식으로 발행하고 PUBLISHED로 변경한다")
     void pollAndPublish_publishesPendingEvents() {
         // given
         OutboxEvent outbox = createOutboxEvent("course-456");
@@ -116,6 +116,7 @@ class OutboxPollingSchedulerIntegrationTest {
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
             Message message = rabbitTemplate.receive(QUEUE, 1000);
             assertThat(message).isNotNull();
+            assertThat(message.getMessageProperties().getContentType()).isEqualTo("application/json");
 
             String body = new String(message.getBody());
             assertThat(body).contains("course-456");
@@ -128,7 +129,7 @@ class OutboxPollingSchedulerIntegrationTest {
     }
 
     @Test
-    @DisplayName("IntegrationEvent 형식으로 변환되어 전송된다")
+    @DisplayName("IntegrationEvent가 JSON 형식으로 변환되어 전송된다")
     void pollAndPublish_sendsIntegrationEventFormat() throws Exception {
         // given
         OutboxEvent outbox = createOutboxEvent("course-789");
@@ -141,6 +142,7 @@ class OutboxPollingSchedulerIntegrationTest {
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
             Message message = rabbitTemplate.receive(QUEUE, 1000);
             assertThat(message).isNotNull();
+            assertThat(message.getMessageProperties().getContentType()).isEqualTo("application/json");
 
             String body = new String(message.getBody());
             JsonNode json = objectMapper.readTree(body);
@@ -243,10 +245,11 @@ class OutboxPollingSchedulerIntegrationTest {
         // when
         scheduler.processDlqEvents();
 
-        // then - DLQ 큐에 메시지 도착 확인
+        // then - DLQ 큐에 JSON 메시지 도착 확인
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> {
             Message message = rabbitTemplate.receive(DLQ_QUEUE, 1000);
             assertThat(message).isNotNull();
+            assertThat(message.getMessageProperties().getContentType()).isEqualTo("application/json");
 
             String body = new String(message.getBody());
             assertThat(body).contains("course-dlq");
