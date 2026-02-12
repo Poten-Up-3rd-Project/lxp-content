@@ -4,6 +4,7 @@ import com.lxp.content.resource.application.port.provided.command.AttachResource
 import com.lxp.content.resource.application.port.provided.command.ConfirmUploadCommand;
 import com.lxp.content.resource.application.port.provided.command.DeleteResourceCommand;
 import com.lxp.content.resource.application.port.provided.command.DetachResourceCommand;
+import com.lxp.content.resource.application.port.provided.command.DownloadUrlCommand;
 import com.lxp.content.resource.application.port.provided.command.MarkForDeleteCommand;
 import com.lxp.content.resource.application.port.provided.query.GenerateUploadUrlQuery;
 import com.lxp.content.resource.application.port.provided.result.PresignedUrlResult;
@@ -11,6 +12,7 @@ import com.lxp.content.resource.application.port.provided.usecase.AttachResource
 import com.lxp.content.resource.application.port.provided.usecase.ConfirmUploadUseCase;
 import com.lxp.content.resource.application.port.provided.usecase.DeleteResourceUseCase;
 import com.lxp.content.resource.application.port.provided.usecase.DetachResourceUseCase;
+import com.lxp.content.resource.application.port.provided.usecase.DownloadUrlUseCase;
 import com.lxp.content.resource.application.port.provided.usecase.GenerateUploadUrlUseCase;
 import com.lxp.content.resource.application.port.provided.usecase.MarkForDeleteUseCase;
 import com.lxp.content.resource.domain.model.vo.UploadType;
@@ -23,10 +25,13 @@ import com.lxp.passport.authorization.annotation.RequireRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URL;
 
 @RestController
 @RequestMapping("/api-v1/resources")
@@ -36,6 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ResourceExternalController {
 
     private final GenerateUploadUrlUseCase generateUploadUrlUseCase;
+    private final DownloadUrlUseCase downloadUrlUseCase;
     private final ConfirmUploadUseCase confirmUploadUseCase;
     private final AttachResourceUseCase attachResourceUseCase;
     private final DetachResourceUseCase detachResourceUseCase;
@@ -84,4 +90,10 @@ public class ResourceExternalController {
         deleteResourceUseCase.execute(new DeleteResourceCommand(req.key()));
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping
+    public ResponseEntity<URL> download(@RequestBody ResourceKeyRequest req) {
+        return ResponseEntity.ok(downloadUrlUseCase.execute(new DownloadUrlCommand(req.key())));
+    }
+
 }
